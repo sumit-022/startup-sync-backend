@@ -660,6 +660,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'plugin::users-permissions.role'
     >;
     fullname: Attribute.String;
+    jobs: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::job.job'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -717,39 +722,6 @@ export interface ApiCompanyCompany extends Schema.CollectionType {
   };
 }
 
-export interface ApiEmployeeEmployee extends Schema.CollectionType {
-  collectionName: 'employees';
-  info: {
-    singularName: 'employee';
-    pluralName: 'employees';
-    displayName: 'Employee';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    name: Attribute.String;
-    email: Attribute.Email;
-    password: Attribute.Password;
-    description: Attribute.Text;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::employee.employee',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::employee.employee',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
 export interface ApiJobJob extends Schema.CollectionType {
   collectionName: 'jobs';
   info: {
@@ -771,11 +743,9 @@ export interface ApiJobJob extends Schema.CollectionType {
         'QUOTERECEIVED',
         'QUOTEDTOCLIENT',
         'ORDERCONFIRMED',
-        'JOBCLOSED',
         'JOBCOMPLETED',
         'JOBCANCELLED',
-        'PODAWAITED',
-        'INVOICEGENERATED'
+        'PODAWAITED'
       ]
     > &
       Attribute.Required &
@@ -800,6 +770,11 @@ export interface ApiJobJob extends Schema.CollectionType {
     >;
     invoiceDate: Attribute.Date;
     serviceReport: Attribute.Media;
+    assignedTo: Attribute.Relation<
+      'api::job.job',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -922,7 +897,6 @@ declare module '@strapi/types' {
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'api::company.company': ApiCompanyCompany;
-      'api::employee.employee': ApiEmployeeEmployee;
       'api::job.job': ApiJobJob;
       'api::service.service': ApiServiceService;
       'api::spare.spare': ApiSpareSpare;

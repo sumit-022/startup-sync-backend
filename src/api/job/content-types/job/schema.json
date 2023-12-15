@@ -26,11 +26,9 @@
         "QUOTERECEIVED",
         "QUOTEDTOCLIENT",
         "ORDERCONFIRMED",
-        "JOBCLOSED",
         "JOBCOMPLETED",
         "JOBCANCELLED",
-        "PODAWAITED",
-        "INVOICEGENERATED"
+        "PODAWAITED"
       ],
       "default": "QUERYRECEIVED",
       "required": true
@@ -87,6 +85,12 @@
         "videos",
         "audios"
       ]
+    },
+    "assignedTo": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "jobs"
     }
   }
 }
