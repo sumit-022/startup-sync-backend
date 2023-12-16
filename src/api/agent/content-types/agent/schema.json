@@ -23,6 +23,12 @@
       "type": "email",
       "required": true,
       "unique": true
+    },
+    "jobs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::job.job",
+      "mappedBy": "agent"
     }
   }
 }
