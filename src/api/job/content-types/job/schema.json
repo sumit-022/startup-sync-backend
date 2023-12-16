@@ -96,8 +96,7 @@
     "type": {
       "type": "enumeration",
       "enum": [
-        "SPARES",
-        "SUPPLY",
+        "SPARES SUPPLY",
         "SERVICES"
       ]
     },
