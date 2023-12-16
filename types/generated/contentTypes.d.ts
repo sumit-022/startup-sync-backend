@@ -762,7 +762,6 @@ export interface ApiJobJob extends Schema.CollectionType {
       'oneToMany',
       'api::service.service'
     >;
-    spares: Attribute.Relation<'api::job.job', 'oneToMany', 'api::spare.spare'>;
     company: Attribute.Relation<
       'api::job.job',
       'manyToOne',
@@ -775,6 +774,7 @@ export interface ApiJobJob extends Schema.CollectionType {
       'manyToOne',
       'plugin::users-permissions.user'
     >;
+    spares: Attribute.DynamicZone<['jobs.spare']>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

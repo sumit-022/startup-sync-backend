@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_jobs_spares",
+  "info": {
+    "displayName": "spare",
+    "icon": "shoppingCart"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "make": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    }
+  }
+}

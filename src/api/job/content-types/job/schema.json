@@ -61,11 +61,6 @@
       "relation": "oneToMany",
       "target": "api::service.service"
     },
-    "spares": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::spare.spare"
-    },
     "company": {
       "type": "relation",
       "relation": "manyToOne",
@@ -91,6 +86,20 @@
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user",
       "inversedBy": "jobs"
+    },
+    "spares": {
+      "type": "dynamiczone",
+      "components": [
+        "jobs.spare"
+      ]
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "SPARES",
+        "SUPPLY",
+        "SERVICES"
+      ]
     }
   }
 }
