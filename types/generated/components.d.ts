@@ -11,6 +11,7 @@ export interface JobsNotification extends Schema.Component {
     title: Attribute.String & Attribute.Required;
     body: Attribute.Text;
     timestamp: Attribute.DateTime & Attribute.Required;
+    viewed: Attribute.Boolean & Attribute.Required & Attribute.DefaultTo<false>;
   };
 }
 

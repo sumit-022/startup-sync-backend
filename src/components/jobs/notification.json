@@ -17,6 +17,11 @@
     "timestamp": {
       "type": "datetime",
       "required": true
+    },
+    "viewed": {
+      "type": "boolean",
+      "default": false,
+      "required": true
     }
   }
 }
