@@ -105,6 +105,18 @@
       "relation": "manyToOne",
       "target": "api::agent.agent",
       "inversedBy": "jobs"
+    },
+    "jobCompleted": {
+      "type": "boolean"
+    },
+    "poNumber": {
+      "type": "string"
+    },
+    "notification": {
+      "displayName": "notification",
+      "type": "component",
+      "repeatable": false,
+      "component": "jobs.notification"
     }
   }
 }

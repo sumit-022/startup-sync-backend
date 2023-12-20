@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_jobs_notifications",
+  "info": {
+    "displayName": "notification",
+    "icon": "bell",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "body": {
+      "type": "text"
+    },
+    "timestamp": {
+      "type": "datetime",
+      "required": true
+    }
+  }
+}

@@ -682,6 +682,40 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
   };
 }
 
+export interface ApiAgentAgent extends Schema.CollectionType {
+  collectionName: 'agents';
+  info: {
+    singularName: 'agent';
+    pluralName: 'agents';
+    displayName: 'Agent';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    name: Attribute.String & Attribute.Required;
+    contact: Attribute.String;
+    email: Attribute.Email & Attribute.Required & Attribute.Unique;
+    jobs: Attribute.Relation<'api::agent.agent', 'oneToMany', 'api::job.job'>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::agent.agent',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::agent.agent',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiCompanyCompany extends Schema.CollectionType {
   collectionName: 'companies';
   info: {
@@ -775,6 +809,11 @@ export interface ApiJobJob extends Schema.CollectionType {
       'plugin::users-permissions.user'
     >;
     spares: Attribute.DynamicZone<['jobs.spare']>;
+    type: Attribute.Enumeration<['SPARES SUPPLY', 'SERVICES']>;
+    agent: Attribute.Relation<'api::job.job', 'manyToOne', 'api::agent.agent'>;
+    jobCompleted: Attribute.Boolean;
+    poNumber: Attribute.String;
+    notification: Attribute.Component<'jobs.notification'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -896,6 +935,7 @@ declare module '@strapi/types' {
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
+      'api::agent.agent': ApiAgentAgent;
       'api::company.company': ApiCompanyCompany;
       'api::job.job': ApiJobJob;
       'api::service.service': ApiServiceService;
