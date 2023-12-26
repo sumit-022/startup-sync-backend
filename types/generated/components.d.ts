@@ -32,12 +32,13 @@ export interface PeopleContactPerson extends Schema.Component {
   collectionName: 'components_people_contact_people';
   info: {
     displayName: 'ContactPerson';
+    description: '';
   };
   attributes: {
     name: Attribute.String;
     mobile: Attribute.String;
     landline: Attribute.String;
-    mail: Attribute.String;
+    mail: Attribute.Email;
   };
 }
 

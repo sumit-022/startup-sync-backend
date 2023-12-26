@@ -1,7 +1,8 @@
 {
   "collectionName": "components_people_contact_people",
   "info": {
-    "displayName": "ContactPerson"
+    "displayName": "ContactPerson",
+    "description": ""
   },
   "options": {},
   "attributes": {
@@ -15,7 +16,7 @@
       "type": "string"
     },
     "mail": {
-      "type": "string"
+      "type": "email"
     }
   }
 }

@@ -66,9 +66,6 @@
     "freightterms": {
       "type": "string"
     },
-    "ownership": {
-      "type": "string"
-    },
     "declaration": {
       "type": "boolean",
       "default": false
@@ -77,6 +74,19 @@
       "type": "boolean",
       "default": false,
       "required": true
+    },
+    "ownership": {
+      "type": "enumeration",
+      "enum": [
+        "PUBLIC",
+        "PRIVATE",
+        "GOVERNMENTOWNED"
+      ]
+    },
+    "services": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::service.service"
     }
   }
 }

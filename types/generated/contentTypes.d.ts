@@ -882,9 +882,14 @@ export interface ApiVendorVendor extends Schema.CollectionType {
     payterms: Attribute.String;
     paymethod: Attribute.String;
     freightterms: Attribute.String;
-    ownership: Attribute.String;
     declaration: Attribute.Boolean & Attribute.DefaultTo<false>;
     filled: Attribute.Boolean & Attribute.Required & Attribute.DefaultTo<false>;
+    ownership: Attribute.Enumeration<['PUBLIC', 'PRIVATE', 'GOVERNMENTOWNED']>;
+    services: Attribute.Relation<
+      'api::vendor.vendor',
+      'oneToMany',
+      'api::service.service'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
