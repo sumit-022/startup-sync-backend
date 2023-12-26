@@ -28,11 +28,25 @@ export interface JobsSpare extends Schema.Component {
   };
 }
 
+export interface PeopleContactPerson extends Schema.Component {
+  collectionName: 'components_people_contact_people';
+  info: {
+    displayName: 'ContactPerson';
+  };
+  attributes: {
+    name: Attribute.String;
+    mobile: Attribute.String;
+    landline: Attribute.String;
+    mail: Attribute.String;
+  };
+}
+
 declare module '@strapi/types' {
   export module Shared {
     export interface Components {
       'jobs.notification': JobsNotification;
       'jobs.spare': JobsSpare;
+      'people.contact-person': PeopleContactPerson;
     }
   }
 }

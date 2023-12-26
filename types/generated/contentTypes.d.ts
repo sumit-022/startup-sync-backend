@@ -855,37 +855,6 @@ export interface ApiServiceService extends Schema.CollectionType {
   };
 }
 
-export interface ApiSpareSpare extends Schema.CollectionType {
-  collectionName: 'spares';
-  info: {
-    singularName: 'spare';
-    pluralName: 'spares';
-    displayName: 'Spare';
-    description: '';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    title: Attribute.String & Attribute.Required & Attribute.Unique;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::spare.spare',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::spare.spare',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
 export interface ApiVendorVendor extends Schema.CollectionType {
   collectionName: 'vendors';
   info: {
@@ -901,6 +870,21 @@ export interface ApiVendorVendor extends Schema.CollectionType {
     name: Attribute.String;
     email: Attribute.Email & Attribute.Required & Attribute.Unique;
     description: Attribute.Text;
+    salescontact: Attribute.Component<'people.contact-person'>;
+    emergencycontact: Attribute.Component<'people.contact-person'>;
+    accountscontact: Attribute.Component<'people.contact-person'>;
+    bankname: Attribute.String;
+    bankcountry: Attribute.String;
+    accountname: Attribute.String;
+    accountnumber: Attribute.String;
+    swiftcode: Attribute.String;
+    ibannumber: Attribute.String;
+    payterms: Attribute.String;
+    paymethod: Attribute.String;
+    freightterms: Attribute.String;
+    ownership: Attribute.String;
+    declaration: Attribute.Boolean & Attribute.DefaultTo<false>;
+    filled: Attribute.Boolean & Attribute.Required & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -939,7 +923,6 @@ declare module '@strapi/types' {
       'api::company.company': ApiCompanyCompany;
       'api::job.job': ApiJobJob;
       'api::service.service': ApiServiceService;
-      'api::spare.spare': ApiSpareSpare;
       'api::vendor.vendor': ApiVendorVendor;
     }
   }

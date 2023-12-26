@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_people_contact_people",
+  "info": {
+    "displayName": "ContactPerson"
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "mobile": {
+      "type": "string"
+    },
+    "landline": {
+      "type": "string"
+    },
+    "mail": {
+      "type": "string"
+    }
+  }
+}

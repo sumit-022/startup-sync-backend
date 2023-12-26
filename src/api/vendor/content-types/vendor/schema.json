@@ -22,6 +22,61 @@
     },
     "description": {
       "type": "text"
+    },
+    "salescontact": {
+      "displayName": "ContactPerson",
+      "type": "component",
+      "repeatable": false,
+      "component": "people.contact-person"
+    },
+    "emergencycontact": {
+      "type": "component",
+      "repeatable": false,
+      "component": "people.contact-person"
+    },
+    "accountscontact": {
+      "type": "component",
+      "repeatable": false,
+      "component": "people.contact-person"
+    },
+    "bankname": {
+      "type": "string"
+    },
+    "bankcountry": {
+      "type": "string"
+    },
+    "accountname": {
+      "type": "string"
+    },
+    "accountnumber": {
+      "type": "string"
+    },
+    "swiftcode": {
+      "type": "string"
+    },
+    "ibannumber": {
+      "type": "string"
+    },
+    "payterms": {
+      "type": "string"
+    },
+    "paymethod": {
+      "type": "string"
+    },
+    "freightterms": {
+      "type": "string"
+    },
+    "ownership": {
+      "type": "string"
+    },
+    "declaration": {
+      "type": "boolean",
+      "default": false
+    },
+    "filled": {
+      "type": "boolean",
+      "default": false,
+      "required": true
     }
   }
 }
