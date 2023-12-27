@@ -2,7 +2,7 @@ export default {
   routes: [
     {
       method: "POST",
-      path: "/vendors/generate-vendor-id",
+      path: "/vendors/form/generate-vendor-id",
       handler: "vendor.generateVendorId",
       config: {
         policies: [],
@@ -10,8 +10,16 @@ export default {
     },
     {
       method: "PUT",
-      path: "/vendors/:hash",
+      path: "/vendors/form/:hash",
       handler: "vendor.updateVendor",
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: "GET",
+      path: "/vendors/form/:hash",
+      handler: "vendor.getVendor",
       config: {
         policies: [],
       },

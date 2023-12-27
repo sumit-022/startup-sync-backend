@@ -47,6 +47,7 @@ export default factories.createCoreController(
       const vendor = await strapi.entityService.findMany("api::vendor.vendor", {
         filters: {
           hash,
+          filled: false,
         },
         limit: 1,
         publicationState: "preview",
@@ -54,11 +55,6 @@ export default factories.createCoreController(
 
       if (vendor.length === 0) {
         return ctx.badRequest("Invalid vendor hash");
-      }
-      if (vendor[0].filled) {
-        return ctx.badRequest(
-          "Vendor already filled. Use strapi admin to edit"
-        );
       }
 
       // Update the vendor with the given hash
@@ -76,6 +72,27 @@ export default factories.createCoreController(
       );
 
       return entry;
+    },
+
+    // Handler to check if a hash is valid and return the vendor
+    async getVendor(ctx) {
+      const { hash } = ctx.params;
+
+      // Search for the vendor with the given hash
+      const vendor = await strapi.entityService.findMany("api::vendor.vendor", {
+        filters: {
+          hash,
+          filled: false,
+        },
+        limit: 1,
+        publicationState: "preview",
+      });
+
+      if (vendor.length === 0) {
+        return ctx.badRequest("Invalid vendor hash");
+      }
+
+      return vendor[0];
     },
   })
 );
