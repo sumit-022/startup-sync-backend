@@ -8,5 +8,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "PUT",
+      path: "/vendors/:hash",
+      handler: "vendor.updateVendor",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

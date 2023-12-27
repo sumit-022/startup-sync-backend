@@ -890,6 +890,7 @@ export interface ApiVendorVendor extends Schema.CollectionType {
       'oneToMany',
       'api::service.service'
     >;
+    hash: Attribute.String & Attribute.Private & Attribute.Unique;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

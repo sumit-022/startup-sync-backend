@@ -87,6 +87,12 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::service.service"
+    },
+    "hash": {
+      "type": "string",
+      "unique": true,
+      "required": false,
+      "private": true
     }
   }
 }
