@@ -868,7 +868,7 @@ export interface ApiVendorVendor extends Schema.CollectionType {
   };
   attributes: {
     name: Attribute.String;
-    email: Attribute.Email & Attribute.Required & Attribute.Unique;
+    email: Attribute.Email;
     description: Attribute.Text;
     salescontact: Attribute.Component<'people.contact-person'>;
     emergencycontact: Attribute.Component<'people.contact-person'>;
