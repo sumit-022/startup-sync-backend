@@ -93,6 +93,22 @@
       "unique": true,
       "required": false,
       "private": true
+    },
+    "regNumber": {
+      "type": "string",
+      "required": true
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
     }
   }
 }
