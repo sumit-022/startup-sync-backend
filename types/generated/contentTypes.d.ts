@@ -891,7 +891,7 @@ export interface ApiVendorVendor extends Schema.CollectionType {
       'api::service.service'
     >;
     hash: Attribute.String & Attribute.Private & Attribute.Unique;
-    regNumber: Attribute.String & Attribute.Required;
+    regNumber: Attribute.String;
     address: Attribute.String;
     city: Attribute.String;
     zip: Attribute.String;

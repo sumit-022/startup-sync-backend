@@ -82,10 +82,9 @@ export default factories.createCoreController(
       const vendor = await strapi.entityService.findMany("api::vendor.vendor", {
         filters: {
           hash,
-          filled: false,
         },
+        populate: "*",
         limit: 1,
-        publicationState: "preview",
       });
 
       if (vendor.length === 0) {
