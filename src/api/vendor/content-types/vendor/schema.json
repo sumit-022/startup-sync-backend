@@ -109,6 +109,9 @@
     },
     "country": {
       "type": "string"
+    },
+    "bankcode": {
+      "type": "string"
     }
   }
 }

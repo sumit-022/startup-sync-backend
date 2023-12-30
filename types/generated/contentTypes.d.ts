@@ -896,6 +896,7 @@ export interface ApiVendorVendor extends Schema.CollectionType {
     city: Attribute.String;
     zip: Attribute.String;
     country: Attribute.String;
+    bankcode: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
