@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_jobs_rfq_forms",
+  "info": {
+    "displayName": "RFQForm",
+    "icon": "information",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "shipName": {
+      "type": "string",
+      "required": true
+    },
+    "RFQNumber": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "SpareDetails": {
+      "displayName": "spare-details",
+      "type": "component",
+      "repeatable": true,
+      "component": "jobs.spare-details"
+    },
+    "vendors": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::vendor.vendor",
+      "private": true
+    }
+  }
+}

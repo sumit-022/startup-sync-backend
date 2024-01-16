@@ -117,6 +117,12 @@
       "type": "component",
       "repeatable": false,
       "component": "jobs.notification"
+    },
+    "RFQForm": {
+      "displayName": "RFQForm",
+      "type": "component",
+      "repeatable": false,
+      "component": "jobs.rfq-form"
     }
   }
 }

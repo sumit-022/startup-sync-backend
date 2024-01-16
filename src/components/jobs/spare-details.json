@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_jobs_spare_details",
+  "info": {
+    "displayName": "SpareDetails",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "quantity": {
+      "type": "integer",
+      "required": true,
+      "min": 1
+    },
+    "description": {
+      "type": "text"
+    }
+  }
+}

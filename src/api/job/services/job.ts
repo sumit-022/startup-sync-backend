@@ -60,4 +60,11 @@ export default factories.createCoreService("api::job.job", ({ strapi }) => ({
     // Return the parsed CSV
     return json;
   },
+
+  generateRFQNumber(jobCode: string) {
+    // Generate the RFQNumber
+    // RFQ Number format :: RFQ-<JOBCODE>
+    const rfqNumber = `RFQ-${jobCode}`;
+    return rfqNumber;
+  },
 }));
