@@ -27,6 +27,9 @@
       "relation": "oneToMany",
       "target": "api::vendor.vendor",
       "private": true
+    },
+    "description": {
+      "type": "text"
     }
   }
 }

@@ -3,6 +3,7 @@
  */
 
 import { factories } from "@strapi/strapi";
+import fs from "fs";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -39,9 +40,20 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   },
 
   async createRFQForm(ctx) {
+    // TODO: Allow custom attachments for each vendor
+
     // Get the jobcode from the request body
-    console.log({ body: ctx.request.body });
-    const { jobId: id, spareDetails, vendors } = ctx.request.body;
+    let { jobId: id, spareDetails, vendors } = ctx.request.body;
+    const files = ctx.request.files;
+
+    spareDetails = JSON.parse(spareDetails);
+    vendors = JSON.parse(vendors);
+    let attachment = files.attachment;
+
+    if (attachment.size > 10 * 1024 * 1024)
+      return ctx.badRequest("Attachment too large");
+
+    const buffer = fs.readFileSync(attachment.path);
 
     if (!id) return ctx.badRequest("Job id is required");
 
@@ -52,8 +64,6 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
 
     if (!job) return ctx.notFound("Job not found");
     if (job.RFQForm) return ctx.badRequest("RFQ form already generated");
-
-    console.log({ job });
 
     // Generate the RFQ number
     const rfqNumber = strapi
@@ -69,7 +79,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         description: spareDetail.description,
       })),
       vendors: vendors && {
-        connect: vendors,
+        connect: vendors.map((vendor: any) => vendor.id),
       },
     };
 
@@ -89,6 +99,32 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           },
         },
       }
+    );
+
+    const vendorMails = (updatedJob.RFQForm as any).vendors.map(
+      (vendor: any) => vendor.email
+    ) as string[];
+
+    // Send mails to every vendor
+    const mails = await Promise.allSettled(
+      vendorMails.map((vendorMail) =>
+        strapi.plugins["email"].services.email.send({
+          to: vendorMail,
+          subject: "Request for Quotation - Shinpo Engineering",
+          attachments: buffer && [
+            {
+              filename: attachment.name,
+              content: buffer,
+            },
+          ],
+        })
+      )
+    );
+
+    mails.forEach(
+      ({ status }, idx) =>
+        status === "rejected" &&
+        console.warn(`Mail to ${vendorMails[idx]} failed`)
     );
 
     return updatedJob;

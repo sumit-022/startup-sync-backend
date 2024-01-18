@@ -23,6 +23,7 @@
       "enum": [
         "QUERYRECEIVED",
         "QUOTEDTOVENDOR",
+        "RFQSENT",
         "QUOTERECEIVED",
         "QUOTEDTOCLIENT",
         "ORDERCONFIRMED",
