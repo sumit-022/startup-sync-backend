@@ -13,11 +13,9 @@ export default factories.createCoreController(
     // Creates a new generic temp. vendor with 'filled' as false and returns its id
     async generateVendorId(ctx) {
       const { email } = ctx.request.body;
-      let origin = ctx.request.origin || ctx.request.headers.origin;
+      let origin = ctx.request.body.origin || ctx.request.headers.origin;
 
       origin = matchBaseUrl(origin);
-
-      console.log({ origin });
 
       if (!email) {
         return ctx.badRequest("Email is required");
