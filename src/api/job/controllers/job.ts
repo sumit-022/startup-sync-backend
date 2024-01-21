@@ -136,16 +136,22 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       ({ status }) => status === "rejected"
     );
 
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "";
+
+    if (ENCRYPTION_KEY === "") {
+      console.warn("Encryption key not set");
+    }
+
     // Send mails to every vendor
     const mails = await Promise.allSettled(
       vendorMails.map((vendor) =>
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
           subject: "Request for Quotation - Shinpo Engineering",
-          html: `Fill the form at ${origin}/rfq/${encrypt(
-            vendor.id.toString(),
-            process.env.ENCRYPTION_KEY || ""
-          )}`,
+          html: `Fill the form at ${origin}/vendor/form/rfq/${encrypt(
+            rfqNumber,
+            ENCRYPTION_KEY
+          )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
           attachments: buffer && [
             {
               filename: attachment.name,
