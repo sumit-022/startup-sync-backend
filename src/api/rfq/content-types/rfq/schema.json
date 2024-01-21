@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rfqs",
+  "info": {
+    "singularName": "rfq",
+    "pluralName": "rfqs",
+    "displayName": "RFQ",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "RFQNumber": {
+      "type": "string",
+      "required": true
+    },
+    "spare": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::spare.spare",
+      "inversedBy": "rfq"
+    },
+    "quotedPrice": {
+      "required": true,
+      "type": "integer"
+    },
+    "selected": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "vendor": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::vendor.vendor"
+    }
+  }
+}

@@ -88,12 +88,6 @@
       "target": "plugin::users-permissions.user",
       "inversedBy": "jobs"
     },
-    "spares": {
-      "type": "dynamiczone",
-      "components": [
-        "jobs.spare"
-      ]
-    },
     "type": {
       "type": "enumeration",
       "enum": [
@@ -119,11 +113,11 @@
       "repeatable": false,
       "component": "jobs.notification"
     },
-    "RFQForm": {
-      "displayName": "RFQForm",
-      "type": "component",
-      "repeatable": false,
-      "component": "jobs.rfq-form"
+    "spares": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::spare.spare",
+      "mappedBy": "job"
     }
   }
 }

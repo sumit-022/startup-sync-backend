@@ -2,8 +2,8 @@ export default {
   routes: [
     {
       method: "POST",
-      path: "/job/create-rfq",
-      handler: "job.createRFQForm",
+      path: "/job/send-rfq",
+      handler: "job.sendRFQForm",
       config: {
         policies: [],
       },

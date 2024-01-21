@@ -482,6 +482,97 @@ export interface PluginUploadFolder extends Schema.CollectionType {
   };
 }
 
+export interface PluginContentReleasesRelease extends Schema.CollectionType {
+  collectionName: 'strapi_releases';
+  info: {
+    singularName: 'release';
+    pluralName: 'releases';
+    displayName: 'Release';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+  };
+  attributes: {
+    name: Attribute.String & Attribute.Required;
+    releasedAt: Attribute.DateTime;
+    actions: Attribute.Relation<
+      'plugin::content-releases.release',
+      'oneToMany',
+      'plugin::content-releases.release-action'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'plugin::content-releases.release',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'plugin::content-releases.release',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface PluginContentReleasesReleaseAction
+  extends Schema.CollectionType {
+  collectionName: 'strapi_release_actions';
+  info: {
+    singularName: 'release-action';
+    pluralName: 'release-actions';
+    displayName: 'Release Action';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+  };
+  attributes: {
+    type: Attribute.Enumeration<['publish', 'unpublish']> & Attribute.Required;
+    entry: Attribute.Relation<
+      'plugin::content-releases.release-action',
+      'morphToOne'
+    >;
+    contentType: Attribute.String & Attribute.Required;
+    release: Attribute.Relation<
+      'plugin::content-releases.release-action',
+      'manyToOne',
+      'plugin::content-releases.release'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'plugin::content-releases.release-action',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'plugin::content-releases.release-action',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface PluginI18NLocale extends Schema.CollectionType {
   collectionName: 'i18n_locale';
   info: {
@@ -774,6 +865,7 @@ export interface ApiJobJob extends Schema.CollectionType {
       [
         'QUERYRECEIVED',
         'QUOTEDTOVENDOR',
+        'RFQSENT',
         'QUOTERECEIVED',
         'QUOTEDTOCLIENT',
         'ORDERCONFIRMED',
@@ -808,18 +900,51 @@ export interface ApiJobJob extends Schema.CollectionType {
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    spares: Attribute.DynamicZone<['jobs.spare']>;
     type: Attribute.Enumeration<['SPARES SUPPLY', 'SERVICES']>;
     agent: Attribute.Relation<'api::job.job', 'manyToOne', 'api::agent.agent'>;
     jobCompleted: Attribute.Boolean;
     poNumber: Attribute.String;
     notification: Attribute.Component<'jobs.notification'>;
+    spares: Attribute.Relation<'api::job.job', 'oneToMany', 'api::spare.spare'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::job.job', 'oneToOne', 'admin::user'> &
       Attribute.Private;
     updatedBy: Attribute.Relation<'api::job.job', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+  };
+}
+
+export interface ApiRfqRfq extends Schema.CollectionType {
+  collectionName: 'rfqs';
+  info: {
+    singularName: 'rfq';
+    pluralName: 'rfqs';
+    displayName: 'RFQ';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    RFQNumber: Attribute.String & Attribute.Required;
+    spare: Attribute.Relation<'api::rfq.rfq', 'oneToOne', 'api::spare.spare'>;
+    quotedPrice: Attribute.Integer & Attribute.Required;
+    selected: Attribute.Boolean &
+      Attribute.Required &
+      Attribute.DefaultTo<false>;
+    vendor: Attribute.Relation<
+      'api::rfq.rfq',
+      'oneToOne',
+      'api::vendor.vendor'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<'api::rfq.rfq', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<'api::rfq.rfq', 'oneToOne', 'admin::user'> &
       Attribute.Private;
   };
 }
@@ -848,6 +973,41 @@ export interface ApiServiceService extends Schema.CollectionType {
       Attribute.Private;
     updatedBy: Attribute.Relation<
       'api::service.service',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiSpareSpare extends Schema.CollectionType {
+  collectionName: 'spares';
+  info: {
+    singularName: 'spare';
+    pluralName: 'spares';
+    displayName: 'Spare';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    title: Attribute.String & Attribute.Required;
+    make: Attribute.String;
+    model: Attribute.String;
+    rfq: Attribute.Relation<'api::spare.spare', 'oneToOne', 'api::rfq.rfq'>;
+    job: Attribute.Relation<'api::spare.spare', 'manyToOne', 'api::job.job'>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::spare.spare',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::spare.spare',
       'oneToOne',
       'admin::user'
     > &
@@ -927,6 +1087,8 @@ declare module '@strapi/types' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
+      'plugin::content-releases.release': PluginContentReleasesRelease;
+      'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
@@ -934,7 +1096,9 @@ declare module '@strapi/types' {
       'api::agent.agent': ApiAgentAgent;
       'api::company.company': ApiCompanyCompany;
       'api::job.job': ApiJobJob;
+      'api::rfq.rfq': ApiRfqRfq;
       'api::service.service': ApiServiceService;
+      'api::spare.spare': ApiSpareSpare;
       'api::vendor.vendor': ApiVendorVendor;
     }
   }

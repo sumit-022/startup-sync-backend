@@ -15,6 +15,44 @@ export interface JobsNotification extends Schema.Component {
   };
 }
 
+export interface JobsRfqForm extends Schema.Component {
+  collectionName: 'components_jobs_rfq_forms';
+  info: {
+    displayName: 'RFQForm';
+    icon: 'information';
+    description: '';
+  };
+  attributes: {
+    shipName: Attribute.String & Attribute.Required;
+    RFQNumber: Attribute.String & Attribute.Required & Attribute.Unique;
+    SpareDetails: Attribute.Component<'jobs.spare-details', true>;
+    vendors: Attribute.Relation<
+      'jobs.rfq-form',
+      'oneToMany',
+      'api::vendor.vendor'
+    > &
+      Attribute.Private;
+    description: Attribute.Text;
+  };
+}
+
+export interface JobsSpareDetails extends Schema.Component {
+  collectionName: 'components_jobs_spare_details';
+  info: {
+    displayName: 'SpareDetails';
+    description: '';
+  };
+  attributes: {
+    name: Attribute.String & Attribute.Required;
+    quantity: Attribute.Integer &
+      Attribute.Required &
+      Attribute.SetMinMax<{
+        min: 1;
+      }>;
+    description: Attribute.Text;
+  };
+}
+
 export interface JobsSpare extends Schema.Component {
   collectionName: 'components_jobs_spares';
   info: {
@@ -25,6 +63,18 @@ export interface JobsSpare extends Schema.Component {
     title: Attribute.String;
     make: Attribute.String;
     model: Attribute.String;
+  };
+}
+
+export interface JobsSparesQuote extends Schema.Component {
+  collectionName: 'components_jobs_spares_quotes';
+  info: {
+    displayName: 'SparesQuote';
+  };
+  attributes: {
+    SpareDetails: Attribute.Component<'jobs.spare-details'>;
+    rate: Attribute.Integer;
+    amount: Attribute.Integer;
   };
 }
 
@@ -46,7 +96,10 @@ declare module '@strapi/types' {
   export module Shared {
     export interface Components {
       'jobs.notification': JobsNotification;
+      'jobs.rfq-form': JobsRfqForm;
+      'jobs.spare-details': JobsSpareDetails;
       'jobs.spare': JobsSpare;
+      'jobs.spares-quote': JobsSparesQuote;
       'people.contact-person': PeopleContactPerson;
     }
   }

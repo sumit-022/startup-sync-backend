@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "spares",
+  "info": {
+    "singularName": "spare",
+    "pluralName": "spares",
+    "displayName": "Spare",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    "make": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "rfq": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::rfq.rfq",
+      "mappedBy": "spare"
+    },
+    "job": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::job.job",
+      "inversedBy": "spares"
+    }
+  }
+}

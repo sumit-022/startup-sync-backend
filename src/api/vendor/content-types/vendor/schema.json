@@ -112,12 +112,6 @@
     },
     "bankcode": {
       "type": "string"
-    },
-    "rfq_form_responses": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::rfq-form-response.rfq-form-response",
-      "mappedBy": "vendor"
     }
   }
 }

@@ -4,6 +4,8 @@
 
 import { factories } from "@strapi/strapi";
 import fs from "fs";
+import { matchBaseUrl } from "../../../utils/match";
+import { encrypt } from "../../../utils/encode-decode";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -39,15 +41,24 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     return job;
   },
 
-  async createRFQForm(ctx) {
+  async sendRFQForm(ctx) {
     // TODO: Allow custom attachments for each vendor
 
+    type Vendor = { id: number; attachment: File };
+
     // Get the jobcode from the request body
-    let { jobId: id, spareDetails, vendors } = ctx.request.body;
+    let { jobId: id } = ctx.request.body;
+    const spareDetails = JSON.parse(ctx.request.body.spareDetails) as any[];
+    const vendors = JSON.parse(ctx.request.body.vendors) as Vendor[];
     const files = ctx.request.files;
 
-    spareDetails = JSON.parse(spareDetails);
-    vendors = JSON.parse(vendors);
+    let origin = ctx.request.body.origin || ctx.request.headers.origin;
+
+    origin = matchBaseUrl(origin);
+    if (!origin || origin === false) {
+      return ctx.badRequest("Invalid origin");
+    }
+
     let attachment = files.attachment;
 
     if (attachment.size > 10 * 1024 * 1024)
@@ -58,59 +69,83 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     if (!id) return ctx.badRequest("Job id is required");
 
     // Get the job
-    const job = await strapi.entityService.findOne("api::job.job", id, {
-      populate: ["RFQForm"],
-    });
+    const job = await strapi.entityService.findOne("api::job.job", id);
 
     if (!job) return ctx.notFound("Job not found");
-    if (job.RFQForm) return ctx.badRequest("RFQ form already generated");
+    if (job.status === "RFQSENT")
+      return ctx.badRequest("RFQ form already generated");
+
+    // Get the vendor emails
+    const vendorMails = await strapi.entityService.findMany(
+      "api::vendor.vendor",
+      {
+        filters: {
+          id: vendors.map(({ id }) => id),
+        },
+        fields: ["id", "email"],
+      }
+    );
+
+    console.log({ vendorMails });
+
+    if (!Array.isArray(vendorMails) || vendorMails.length !== vendors.length)
+      return ctx.badRequest("Invalid vendor id");
+
+    // Create the spares
+    const spares = await Promise.allSettled(
+      spareDetails.map((spareDetail: any) =>
+        strapi.entityService.create("api::spare.spare", {
+          data: {
+            title: spareDetail.title,
+            make: spareDetail.make,
+            model: spareDetail.model,
+            job: job.id,
+          },
+        })
+      )
+    );
+
+    const unSettledSpares = spares.filter(
+      ({ status }) => status === "rejected"
+    );
 
     // Generate the RFQ number
     const rfqNumber = strapi
       .service("api::job.job")
       .generateRFQNumber(job.jobCode);
 
-    const rfqForm = {
-      shipName: job.shipName,
-      RFQNumber: rfqNumber,
-      SpareDetails: (spareDetails ?? []).map((spareDetail: any) => ({
-        name: spareDetail.name,
-        quantity: spareDetail.quantity,
-        description: spareDetail.description,
-      })),
-      vendors: vendors && {
-        connect: vendors.map((vendor: any) => vendor.id),
-      },
-    };
-
-    // Create the RFQ form
-    const updatedJob = await strapi.entityService.update(
-      "api::job.job",
-      job.id,
-      {
-        data: {
-          ...job,
-          id: job.id,
-          RFQForm: rfqForm,
-        },
-        populate: {
-          RFQForm: {
-            populate: ["vendors", "SpareDetails"],
-          },
-        },
-      }
+    // Generate a draft RFQ form for each vendor and each spare
+    const rfqForms = await Promise.allSettled(
+      vendors
+        .map((vendor) =>
+          spareDetails.map((spareDetail) =>
+            strapi.entityService.create("api::rfq.rfq", {
+              data: {
+                RFQNumber: rfqNumber,
+                spare: spareDetail.id,
+                quotedPrice: 0,
+                vendor: vendor.id,
+              },
+            })
+          )
+        )
+        .flat()
     );
 
-    const vendorMails = (updatedJob.RFQForm as any).vendors.map(
-      (vendor: any) => vendor.email
-    ) as string[];
+    const unSettledRFQForms = rfqForms.filter(
+      ({ status }) => status === "rejected"
+    );
 
     // Send mails to every vendor
     const mails = await Promise.allSettled(
-      vendorMails.map((vendorMail) =>
+      vendorMails.map((vendor) =>
         strapi.plugins["email"].services.email.send({
-          to: vendorMail,
+          to: (vendor as any).email,
           subject: "Request for Quotation - Shinpo Engineering",
+          html: `Fill the form at ${origin}/rfq/${encrypt(
+            vendor.id.toString(),
+            process.env.ENCRYPTION_KEY || ""
+          )}`,
           attachments: buffer && [
             {
               filename: attachment.name,
@@ -121,12 +156,24 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       )
     );
 
-    mails.forEach(
-      ({ status }, idx) =>
-        status === "rejected" &&
-        console.warn(`Mail to ${vendorMails[idx]} failed`)
-    );
+    const unSettledMails = mails.filter(({ status }) => status === "rejected");
 
-    return updatedJob;
+    // Update the job status
+    await strapi.entityService.update("api::job.job", job.id, {
+      data: {
+        id: job.id,
+        status: "RFQSENT",
+        RFQNumber: rfqNumber,
+      },
+    });
+
+    return {
+      spares: spares,
+      rfqForms,
+      mails,
+      unSettledSpares,
+      unSettledRFQForms,
+      unSettledMails,
+    };
   },
 }));
