@@ -112,6 +112,10 @@
     },
     "bankcode": {
       "type": "string"
+    },
+    "deliveryPort": {
+      "type": "string",
+      "required": false
     }
   }
 }

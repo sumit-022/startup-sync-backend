@@ -40,6 +40,9 @@
       "required": true,
       "default": 1,
       "min": 1
+    },
+    "description": {
+      "type": "text"
     }
   }
 }
