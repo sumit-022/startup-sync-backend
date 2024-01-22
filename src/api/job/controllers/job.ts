@@ -14,10 +14,6 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     // Set the job code
     ctx.request.body.jobCode = jobCode;
 
-    console.log({ jobCode });
-
-    console.log({ body: ctx.request.body });
-
     // // Parse the CSV file using the job service
     // const json = await strapi
     //   .service("api::job.job")
@@ -86,8 +82,6 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       }
     );
 
-    console.log({ vendorMails });
-
     if (!Array.isArray(vendorMails) || vendorMails.length !== vendors.length)
       return ctx.badRequest("Invalid vendor id");
 
@@ -119,17 +113,22 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     const rfqForms = await Promise.allSettled(
       vendors
         .map((vendor) =>
-          spareDetails.map((spareDetail) =>
-            strapi.entityService.create("api::rfq.rfq", {
-              data: {
-                RFQNumber: rfqNumber,
-                spare: spareDetail.id,
-                quotedPrice: 0,
-                vendor: vendor.id,
-              },
-            })
-          )
+          spares
+            .map(({ status, value: spareDetail }: any) =>
+              status === "fulfilled"
+                ? strapi.entityService.create("api::rfq.rfq", {
+                    data: {
+                      RFQNumber: rfqNumber,
+                      spare: spareDetail.id,
+                      quotedPrice: 0,
+                      vendor: vendor.id,
+                    },
+                  })
+                : undefined
+            )
+            .filter((x) => x !== undefined)
         )
+        .filter((x) => x.length !== 0)
         .flat()
     );
 
@@ -175,7 +174,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     });
 
     return {
-      spares: spares,
+      spares,
       rfqForms,
       mails,
       unSettledSpares,
