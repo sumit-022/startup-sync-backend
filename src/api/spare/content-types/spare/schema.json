@@ -34,6 +34,12 @@
       "relation": "manyToOne",
       "target": "api::job.job",
       "inversedBy": "spares"
+    },
+    "quantity": {
+      "type": "integer",
+      "required": true,
+      "default": 1,
+      "min": 1
     }
   }
 }

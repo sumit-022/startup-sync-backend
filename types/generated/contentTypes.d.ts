@@ -997,6 +997,12 @@ export interface ApiSpareSpare extends Schema.CollectionType {
     model: Attribute.String;
     rfq: Attribute.Relation<'api::spare.spare', 'oneToOne', 'api::rfq.rfq'>;
     job: Attribute.Relation<'api::spare.spare', 'manyToOne', 'api::job.job'>;
+    quantity: Attribute.Integer &
+      Attribute.Required &
+      Attribute.SetMinMax<{
+        min: 1;
+      }> &
+      Attribute.DefaultTo<1>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
