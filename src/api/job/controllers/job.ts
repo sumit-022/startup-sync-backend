@@ -6,6 +6,8 @@ import { factories } from "@strapi/strapi";
 import fs from "fs";
 import { matchBaseUrl } from "../../../utils/match";
 import { encrypt } from "../../../utils/encode-decode";
+import { getFormAttachments } from "../../../utils/form";
+import axios from "axios";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -40,7 +42,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async sendRFQForm(ctx) {
     // TODO: Allow custom attachments for each vendor
 
-    type Vendor = { id: number; attachment: File };
+    type Vendor = { id: number; attachment: string };
 
     // Get the jobcode from the request body
     let { jobId: id } = ctx.request.body;
@@ -55,12 +57,15 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       return ctx.badRequest("Invalid origin");
     }
 
-    let attachment = files.attachment;
+    const vendorAttachments = getFormAttachments(files, "vendorAttachments");
+    const spareMedia = getFormAttachments(files, "spareAttachments");
 
-    if (attachment.size > 10 * 1024 * 1024)
-      return ctx.badRequest("Attachment too large");
-
-    const buffer = fs.readFileSync(attachment.path);
+    const buffers = Object.fromEntries(
+      Object.entries(vendorAttachments).map(([name, file]) => [
+        name,
+        fs.readFileSync(file.path),
+      ])
+    );
 
     if (!id) return ctx.badRequest("Job id is required");
 
@@ -68,6 +73,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     const job = await strapi.entityService.findOne("api::job.job", id);
 
     if (!job) return ctx.notFound("Job not found");
+
     if (job.status === "RFQSENT")
       return ctx.badRequest("RFQ form already generated");
 
@@ -76,7 +82,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       "api::vendor.vendor",
       {
         filters: {
-          id: vendors.map(({ id }) => id),
+          id: { $in: vendors.map(({ id }) => id) },
         },
         fields: ["id", "email"],
       }
@@ -102,6 +108,52 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     );
 
     const unSettledSpares = spares.filter(
+      ({ status }) => status === "rejected"
+    );
+
+    // Upload the media for each spare
+    const spareMediaUploads = await Promise.allSettled(
+      (spares as any)
+        .map(({ status, value: spare }, idx: number) => {
+          if (
+            status === "rejected" ||
+            !Array.isArray(spareDetails[idx].attachments)
+          )
+            return undefined;
+          const media = spareDetails[idx].attachments
+            .map((name: string) => spareMedia[name])
+            .filter((x) => x !== undefined);
+          if (media.length === 0) return undefined;
+
+          const f = new FormData();
+
+          f.append("ref", "api::spare.spare");
+          f.append("refId", (spare as any).id);
+          f.append("field", "attachments");
+          media.forEach((file) =>
+            f.append("files", fs.readFileSync(file.path))
+          );
+
+          return new Promise((resolve, reject) => {
+            fetch("http://localhost:1337/api/upload", {
+              method: "POST",
+              body: f,
+              headers: {
+                Authorization: ctx.request.headers.authorization,
+              },
+            }).then((res) => {
+              if (res.ok) {
+                resolve(res.json());
+              } else {
+                reject(res);
+              }
+            });
+          });
+        })
+        .filter((x) => x !== undefined)
+    );
+
+    const unSettledSpareMediaUploads = spareMediaUploads.filter(
       ({ status }) => status === "rejected"
     );
 
@@ -153,12 +205,19 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             rfqNumber,
             ENCRYPTION_KEY
           )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
-          attachments: buffer && [
-            {
-              filename: attachment.name,
-              content: buffer,
-            },
-          ],
+          attachments: (() => {
+            const attachment = vendors.find(
+              (v) => v.id === vendor.id
+            )?.attachment;
+            if (!attachment || !vendorAttachments?.[attachment])
+              return undefined;
+            return [
+              {
+                filename: vendorAttachments[attachment].name,
+                content: buffers[attachment],
+              },
+            ];
+          })(),
         })
       )
     );
@@ -176,9 +235,11 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
 
     return {
       spares,
+      spareMediaUploads,
       rfqForms,
       mails,
       unSettledSpares,
+      unSettledSpareMediaUploads,
       unSettledRFQForms,
       unSettledMails,
     };

@@ -46,9 +46,12 @@ export interface JobsSpareDetails extends Schema.Component {
     name: Attribute.String & Attribute.Required;
     quantity: Attribute.Integer &
       Attribute.Required &
-      Attribute.SetMinMax<{
-        min: 1;
-      }>;
+      Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      >;
     description: Attribute.Text;
   };
 }
