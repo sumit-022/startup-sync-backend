@@ -7,7 +7,7 @@ import fs from "fs";
 import { matchBaseUrl } from "../../../utils/match";
 import { encrypt } from "../../../utils/encode-decode";
 import { getFormAttachments } from "../../../utils/form";
-import axios from "axios";
+import { uploadAndLinkDocument } from "../../../utils/upload";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -125,31 +125,23 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             .filter((x) => x !== undefined);
           if (media.length === 0) return undefined;
 
-          const f = new FormData();
-
-          f.append("ref", "api::spare.spare");
-          f.append("refId", (spare as any).id);
-          f.append("field", "attachments");
-          media.forEach((file) =>
-            f.append("files", fs.readFileSync(file.path))
+          return media.map(
+            (m) =>
+              new Promise((resolve, reject) => {
+                uploadAndLinkDocument(fs.readFileSync(m.path), {
+                  extension: m.name.split(".").pop(),
+                  filename: m.name,
+                  mimeType: m.type,
+                  refId: spare.id,
+                  ref: "api::spare.spare",
+                  field: "attachments",
+                })
+                  .then(resolve)
+                  .catch(reject);
+              })
           );
-
-          return new Promise((resolve, reject) => {
-            fetch("http://localhost:1337/api/upload", {
-              method: "POST",
-              body: f,
-              headers: {
-                Authorization: ctx.request.headers.authorization,
-              },
-            }).then((res) => {
-              if (res.ok) {
-                resolve(res.json());
-              } else {
-                reject(res);
-              }
-            });
-          });
         })
+        .flat()
         .filter((x) => x !== undefined)
     );
 
