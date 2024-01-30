@@ -915,7 +915,9 @@ export interface ApiJobJob extends Schema.CollectionType {
     >;
     type: Attribute.Enumeration<['SPARES SUPPLY', 'SERVICES']>;
     agent: Attribute.Relation<'api::job.job', 'manyToOne', 'api::agent.agent'>;
-    jobCompleted: Attribute.Boolean;
+    jobCompleted: Attribute.Boolean &
+      Attribute.Required &
+      Attribute.DefaultTo<false>;
     poNumber: Attribute.String;
     notification: Attribute.Component<'jobs.notification'>;
     spares: Attribute.Relation<'api::job.job', 'oneToMany', 'api::spare.spare'>;

@@ -102,7 +102,9 @@
       "inversedBy": "jobs"
     },
     "jobCompleted": {
-      "type": "boolean"
+      "type": "boolean",
+      "required": true,
+      "default": false
     },
     "poNumber": {
       "type": "string"
