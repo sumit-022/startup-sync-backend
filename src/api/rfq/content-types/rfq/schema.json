@@ -23,7 +23,7 @@
       "inversedBy": "rfq"
     },
     "total": {
-      "required": true,
+      "required": false,
       "type": "decimal"
     },
     "selected": {
@@ -42,7 +42,7 @@
     },
     "unitPrice": {
       "type": "decimal",
-      "required": true
+      "required": false
     },
     "delivery": {
       "type": "decimal"
