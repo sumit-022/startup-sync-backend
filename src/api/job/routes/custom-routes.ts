@@ -8,5 +8,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "POST",
+      path: "/job/send-po",
+      handler: "job.sendPO",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

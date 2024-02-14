@@ -22,9 +22,9 @@
       "target": "api::spare.spare",
       "inversedBy": "rfq"
     },
-    "quotedPrice": {
+    "total": {
       "required": true,
-      "type": "integer"
+      "type": "decimal"
     },
     "selected": {
       "type": "boolean",
@@ -35,6 +35,37 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::vendor.vendor"
+    },
+    "discount": {
+      "type": "decimal",
+      "default": 0
+    },
+    "unitPrice": {
+      "type": "decimal",
+      "required": true
+    },
+    "delivery": {
+      "type": "decimal"
+    },
+    "deliveryTime": {
+      "type": "integer"
+    },
+    "connectDate": {
+      "type": "date"
+    },
+    "connectPort": {
+      "type": "string"
+    },
+    "remark": {
+      "type": "text"
+    },
+    "quantity": {
+      "type": "component",
+      "repeatable": false,
+      "component": "jobs.quantity"
+    },
+    "amount": {
+      "type": "decimal"
     }
   }
 }

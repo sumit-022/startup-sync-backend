@@ -236,4 +236,60 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       unSettledMails,
     };
   },
+  async sendPO(ctx) {
+    type Vendor = { id: number; attachment: string; body: string };
+
+    const vendors = JSON.parse(ctx.request.body.vendors) as Vendor[];
+    const files = ctx.request.files;
+
+    // Get the vendor emails
+    const vendorMails = await strapi.entityService.findMany(
+      "api::vendor.vendor",
+      {
+        filters: {
+          id: { $in: vendors.map(({ id }) => id) },
+        },
+        fields: ["id", "email"],
+      }
+    );
+
+    if (!Array.isArray(vendorMails) || vendorMails.length !== vendors.length)
+      return ctx.badRequest("Invalid vendor id");
+
+    const vendorAttachments = getFormAttachments(files, "attachments");
+
+    const buffers = Object.fromEntries(
+      Object.entries(vendorAttachments).map(([name, file]) => [
+        name,
+        fs.readFileSync(file.path),
+      ])
+    );
+
+    const mails = await Promise.allSettled(
+      vendorMails.map((vendor) =>
+        strapi.plugins["email"].services.email.send({
+          to: (vendor as any).email,
+          subject: "Purchase Order - Shinpo Engineering",
+          html: vendors.find((v) => v.id === vendor.id)?.body,
+          attachments: (() => {
+            const attachment = vendors.find(
+              (v) => v.id === vendor.id
+            )?.attachment;
+            if (!attachment || !vendorAttachments?.[attachment])
+              return undefined;
+            return [
+              {
+                filename: vendorAttachments[attachment].name,
+                content: buffers[attachment],
+              },
+            ];
+          })(),
+        })
+      )
+    );
+
+    return {
+      mails,
+    };
+  },
 }));
