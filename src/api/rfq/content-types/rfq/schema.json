@@ -69,7 +69,7 @@
       "default": false,
       "required": true
     },
-    "connectDate": {
+    "connectTime": {
       "type": "decimal"
     }
   }
