@@ -120,6 +120,16 @@
       "relation": "oneToMany",
       "target": "api::spare.spare",
       "mappedBy": "job"
+    },
+    "purchaseStatus": {
+      "type": "enumeration",
+      "enum": [
+        "QUERYRECEIVED",
+        "RFQSENT",
+        "POISSUED",
+        "COMPLETED"
+      ],
+      "default": "QUERYRECEIVED"
     }
   }
 }

@@ -50,9 +50,6 @@
     "deliveryTime": {
       "type": "integer"
     },
-    "connectDate": {
-      "type": "date"
-    },
     "connectPort": {
       "type": "string"
     },
@@ -71,6 +68,9 @@
       "type": "boolean",
       "default": false,
       "required": true
+    },
+    "connectDate": {
+      "type": "decimal"
     }
   }
 }
