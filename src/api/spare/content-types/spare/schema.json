@@ -23,12 +23,6 @@
     "model": {
       "type": "string"
     },
-    "rfq": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::rfq.rfq",
-      "mappedBy": "spare"
-    },
     "job": {
       "type": "relation",
       "relation": "manyToOne",
@@ -53,6 +47,12 @@
       ],
       "type": "media",
       "multiple": true
+    },
+    "rfqs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::rfq.rfq",
+      "mappedBy": "spare"
     }
   }
 }

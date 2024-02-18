@@ -18,9 +18,9 @@
     },
     "spare": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "manyToOne",
       "target": "api::spare.spare",
-      "inversedBy": "rfq"
+      "inversedBy": "rfqs"
     },
     "total": {
       "required": false,
