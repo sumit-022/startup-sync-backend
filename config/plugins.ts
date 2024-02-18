@@ -31,7 +31,7 @@ export default ({ env }) => ({
         // ... any custom nodemailer options
       },
       settings: {
-        defaultFrom: "ranjan.tripathi@shinpoengineering.com",
+        defaultFrom: "procurement@shinpoengineering.com",
       },
     },
   },
