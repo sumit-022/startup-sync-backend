@@ -1,11 +1,19 @@
-export function getRFQMailContent({ link }: { link: string }) {
+export function getRFQMailContent({
+  link,
+  port,
+  eta,
+}: {
+  link: string;
+  port?: string;
+  eta?: string;
+}) {
   return `Dear Sir / Madam<br/>
 Good day,<br/><br/>
 
 Kindly note attached requisition, please advise best price and availability of the requested parts.<br/><br/>
 
-Port: Singapore<br/>
-ETA: 16th Feb 2024<br/><br/>
+${port ? "Port: " + port + "<br/>" : ""}
+${eta ? "ETA: " + eta + "<br/><br/>" : ""}
 
 Please place your offer online on <a href="${link}">this link</a>.<br/>
 In case you are not able to open above link, please find attached RFQ in PDF format, kindly quote accordingly.
