@@ -200,6 +200,8 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
                 rfqNumber,
                 ENCRYPTION_KEY
               )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
+              port: job.targetPort,
+              eta: job.vesselETA,
             }) + (ctx.request.body.mailFooter || ""),
           attachments: (() => {
             const attachment = vendors.find(
