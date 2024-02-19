@@ -8,6 +8,7 @@ import { matchBaseUrl } from "../../../utils/match";
 import { encrypt } from "../../../utils/encode-decode";
 import { getFormAttachments } from "../../../utils/form";
 import { uploadAndLinkDocument } from "../../../utils/upload";
+import { getRFQMailContent } from "../../../utils/main-content";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -193,10 +194,13 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
           subject: "Request for Quotation - Shinpo Engineering",
-          html: `Fill the form at ${origin}/vendor/form/rfq/${encrypt(
-            rfqNumber,
-            ENCRYPTION_KEY
-          )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
+          html:
+            getRFQMailContent({
+              link: `${origin}/vendor/form/rfq/${encrypt(
+                rfqNumber,
+                ENCRYPTION_KEY
+              )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
+            }) + (ctx.request.body.mailFooter || ""),
           attachments: (() => {
             const attachment = vendors.find(
               (v) => v.id === vendor.id
@@ -270,7 +274,9 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
           subject: "Purchase Order - Shinpo Engineering",
-          html: vendors.find((v) => v.id === vendor.id)?.body,
+          html:
+            vendors.find((v) => v.id === vendor.id)?.body +
+            (ctx.request.body.mailFooter || ""),
           attachments: (() => {
             const attachment = vendors.find(
               (v) => v.id === vendor.id
