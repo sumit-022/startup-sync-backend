@@ -202,7 +202,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
               )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
               port: job.targetPort,
               eta: job.vesselETA
-                ? new Date(job.vesselETA).toISOString()
+                ? new Date(job.vesselETA).toDateString()
                 : undefined,
             }) + (ctx.request.body.mailFooter || ""),
           attachments: (() => {
