@@ -75,7 +75,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
 
     if (!job) return ctx.notFound("Job not found");
 
-    if (job.status === "RFQSENT")
+    if (job.purchaseStatus === "RFQSENT")
       return ctx.badRequest("RFQ form already generated");
 
     // Get the vendor emails
@@ -228,7 +228,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     await strapi.entityService.update("api::job.job", job.id, {
       data: {
         id: job.id,
-        status: "RFQSENT",
+        purchaseStatus: "RFQSENT",
         RFQNumber: rfqNumber,
       },
     });
