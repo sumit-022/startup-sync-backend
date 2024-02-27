@@ -193,6 +193,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       vendorMails.map((vendor) =>
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
+          cc: process.env["CC_EMAIL"] || undefined,
           subject: "Request for Quotation - Shinpo Engineering",
           html:
             getRFQMailContent({
@@ -277,6 +278,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       vendorMails.map((vendor) =>
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
+          cc: process.env["CC_EMAIL"] || undefined,
           subject: "Purchase Order - Shinpo Engineering",
           html:
             vendors.find((v) => v.id === vendor.id)?.body +

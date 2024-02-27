@@ -42,6 +42,7 @@ export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
     // Send a mail to the vendor
     await strapi.plugins["email"].services.email.send({
       to: vendor.email,
+      cc: process.env["CC_EMAIL"] || undefined,
       subject: "RFQ Acknowledgement",
       html: mailBody,
       attachments: [

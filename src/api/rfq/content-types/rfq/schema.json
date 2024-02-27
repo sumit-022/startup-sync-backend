@@ -71,6 +71,19 @@
     },
     "connectTime": {
       "type": "decimal"
+    },
+    "quality": {
+      "type": "enumeration",
+      "enum": [
+        "OEM-JAPAN",
+        "OEM-KOREA",
+        "OEM-CHINA",
+        "OTHEROEM",
+        "GENUINE",
+        "MAKERS",
+        "REPLACEMENT",
+        "COMPATIBLE"
+      ]
     }
   }
 }
