@@ -1,5 +1,5 @@
 async function getRates() {
-  const res = await fetch("https://www.floatrates.com/daily/sgd.json");
+  const res = await fetch("https://www.floatrates.com/daily/usd.json");
   const data = await res.json();
 
   console.log(
@@ -14,5 +14,3 @@ async function getRates() {
     )
   );
 }
-
-getRates();

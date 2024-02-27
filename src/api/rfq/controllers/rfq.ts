@@ -8,7 +8,7 @@ import fs from "fs";
 export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
   async sendRFQAck(ctx) {
     const { id } = ctx.params;
-    const { vendorId, mailBody } = ctx.request.body;
+    const { vendorId, mailBody, subject } = ctx.request.body;
     const files = ctx.request.files;
 
     if (!vendorId) {
@@ -43,7 +43,7 @@ export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
     await strapi.plugins["email"].services.email.send({
       to: vendor.email,
       cc: process.env["CC_EMAIL"] || undefined,
-      subject: "RFQ Acknowledgement",
+      subject: subject || "RFQ Acknowledgement",
       html: mailBody,
       attachments: [
         {

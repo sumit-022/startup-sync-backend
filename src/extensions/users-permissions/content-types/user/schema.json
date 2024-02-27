@@ -73,6 +73,12 @@
       "relation": "oneToMany",
       "target": "api::job.job",
       "mappedBy": "assignedTo"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "designation": {
+      "type": "string"
     }
   }
 }

@@ -84,6 +84,12 @@
         "REPLACEMENT",
         "COMPATIBLE"
       ]
+    },
+    "currencyCode": {
+      "type": "string",
+      "required": true,
+      "default": "USD",
+      "regex": "[A-Z]"
     }
   }
 }

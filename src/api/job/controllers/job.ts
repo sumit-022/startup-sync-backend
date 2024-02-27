@@ -194,7 +194,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
           cc: process.env["CC_EMAIL"] || undefined,
-          subject: "Request for Quotation - Shinpo Engineering",
+          subject: `${rfqNumber} - ${job.description || ""}`,
           html:
             getRFQMailContent({
               link: `${origin}/vendor/form/rfq/${encrypt(
@@ -246,7 +246,12 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     };
   },
   async sendPO(ctx) {
-    type Vendor = { id: number; attachment: string; body: string };
+    type Vendor = {
+      id: number;
+      attachment: string;
+      body: string;
+      subject: string;
+    };
 
     const vendors = JSON.parse(ctx.request.body.vendors) as Vendor[];
     const files = ctx.request.files;
@@ -279,7 +284,9 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
           cc: process.env["CC_EMAIL"] || undefined,
-          subject: "Purchase Order - Shinpo Engineering",
+          subject:
+            vendors.find((v) => v.id === vendor.id)?.subject ||
+            "Purchase Order - Shinpo Engineering",
           html:
             vendors.find((v) => v.id === vendor.id)?.body +
             (ctx.request.body.mailFooter || ""),

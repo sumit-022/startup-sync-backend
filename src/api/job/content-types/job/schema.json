@@ -130,6 +130,12 @@
         "COMPLETED"
       ],
       "default": "QUERYRECEIVED"
+    },
+    "purchase_orders": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::purchase-order.purchase-order",
+      "mappedBy": "job"
     }
   }
 }
