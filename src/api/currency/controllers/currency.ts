@@ -69,7 +69,6 @@ export default factories.createCoreController(
 
       return [
         ...updated
-          .filter((up) => up !== null)
           .map((update, idx) => {
             if (update.status === "fulfilled") {
               if (update.value !== null) return { updated: update.value };
@@ -79,7 +78,8 @@ export default factories.createCoreController(
                 error: update.reason.message,
               };
             }
-          }),
+          })
+          .filter((up) => up !== null),
         ...created.map((create) => {
           if (create.status === "fulfilled") {
             return { created: create.value };
