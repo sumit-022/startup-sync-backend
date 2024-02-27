@@ -3,6 +3,7 @@
  */
 
 import { factories } from "@strapi/strapi";
+import fs from "fs";
 
 export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
   async sendRFQAck(ctx) {
@@ -31,10 +32,12 @@ export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
       return ctx.badRequest("Invalid body");
     }
 
-    const attchment = files?.attachment;
-    if (!attchment) {
+    const attachment = files?.attachment;
+    if (!attachment) {
       return ctx.badRequest("Attachment is required");
     }
+
+    const buffer = fs.readFileSync(attachment.path);
 
     // Send a mail to the vendor
     await strapi.plugins["email"].services.email.send({
@@ -43,8 +46,8 @@ export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
       html: mailBody,
       attachments: [
         {
-          filename: attchment.name,
-          content: attchment.data,
+          filename: attachment.name,
+          content: buffer,
         },
       ],
     });
