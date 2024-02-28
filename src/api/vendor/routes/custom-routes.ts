@@ -17,6 +17,14 @@ export default {
       },
     },
     {
+      method: "PATCH",
+      path: "/vendors/form/mark-registered",
+      handler: "vendor.markAsRegistered",
+      config: {
+        policies: [],
+      },
+    },
+    {
       method: "PUT",
       path: "/vendors/form/:hash",
       handler: "vendor.updateVendor",

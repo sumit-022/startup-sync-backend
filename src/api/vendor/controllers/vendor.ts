@@ -152,5 +152,29 @@ export default factories.createCoreController(
 
       return entry;
     },
+
+    async markAsRegistered(ctx) {
+      // Update all the vendors with email filled to be registered
+      const { magicWord } = ctx.request.body;
+
+      if (magicWord !== "pls update vendors") {
+        return ctx.badRequest("Invalid magic word");
+      }
+
+      const updatedVendors = await strapi.db
+        .query("api::vendor.vendor")
+        .updateMany({
+          where: {
+            email: {
+              $not: "",
+            },
+          },
+          data: {
+            registered: true,
+          },
+        });
+
+      return updatedVendors;
+    },
   })
 );
