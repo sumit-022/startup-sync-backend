@@ -116,6 +116,10 @@
     "deliveryPort": {
       "type": "string",
       "required": false
+    },
+    "registered": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

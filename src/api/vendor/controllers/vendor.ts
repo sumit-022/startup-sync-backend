@@ -93,6 +93,7 @@ export default factories.createCoreController(
           data: {
             ...ctx.request.body,
             filled: true,
+            registered: true,
             // Publish the vendor
             publishedAt: new Date().getTime(),
           },
