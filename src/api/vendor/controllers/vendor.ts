@@ -50,6 +50,7 @@ export default factories.createCoreController(
           data: {
             id: vendor.id,
             hash: hash,
+            registered: true,
           },
         }
       );
@@ -93,7 +94,6 @@ export default factories.createCoreController(
           data: {
             ...ctx.request.body,
             filled: true,
-            registered: true,
             // Publish the vendor
             publishedAt: new Date().getTime(),
           },
@@ -146,6 +146,7 @@ export default factories.createCoreController(
           data: {
             id: vendor.id,
             hash: hash,
+            registered: false,
           },
         }
       );
