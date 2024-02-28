@@ -86,6 +86,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           id: { $in: vendors.map(({ id }) => id) },
         },
         fields: ["id", "email"],
+        populate: ["salescontact"],
       }
     );
 
@@ -193,7 +194,14 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       vendorMails.map((vendor) =>
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
-          cc: process.env["CC_EMAIL"] || undefined,
+          cc: (() => {
+            const cc = [
+              process.env["CC_EMAIL"],
+              vendor.salescontact?.mail,
+            ].filter((mail) => typeof mail === "string");
+            if (cc.length === 0) return undefined;
+            return cc;
+          })(),
           subject: `${rfqNumber} - ${job.description || ""}`,
           html:
             getRFQMailContent({
@@ -264,6 +272,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           id: { $in: vendors.map(({ id }) => id) },
         },
         fields: ["id", "email"],
+        populate: ["salescontact"],
       }
     );
 
@@ -283,7 +292,14 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       vendorMails.map((vendor) =>
         strapi.plugins["email"].services.email.send({
           to: (vendor as any).email,
-          cc: process.env["CC_EMAIL"] || undefined,
+          cc: (() => {
+            const cc = [
+              process.env["CC_EMAIL"],
+              vendor.salescontact?.mail,
+            ].filter((mail) => typeof mail === "string");
+            if (cc.length === 0) return undefined;
+            return cc;
+          })(),
           subject:
             vendors.find((v) => v.id === vendor.id)?.subject ||
             "Purchase Order - Shinpo Engineering",

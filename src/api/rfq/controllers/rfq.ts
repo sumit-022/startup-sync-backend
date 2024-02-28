@@ -25,7 +25,11 @@ export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
 
     const vendor = await strapi.entityService.findOne(
       "api::vendor.vendor",
-      vendorId
+      vendorId,
+      {
+        fields: ["id", "email"],
+        populate: ["salescontact"],
+      }
     );
 
     if (rfqs.length === 0 || !vendor) {
@@ -42,7 +46,13 @@ export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
     // Send a mail to the vendor
     await strapi.plugins["email"].services.email.send({
       to: vendor.email,
-      cc: process.env["CC_EMAIL"] || undefined,
+      cc: (() => {
+        const cc = [process.env["CC_EMAIL"], vendor.salescontact?.mail].filter(
+          (mail) => typeof mail === "string"
+        );
+        if (cc.length === 0) return undefined;
+        return cc;
+      })(),
       subject: subject || "RFQ Acknowledgement",
       html: mailBody,
       attachments: [
