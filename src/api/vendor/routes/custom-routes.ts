@@ -9,6 +9,14 @@ export default {
       },
     },
     {
+      method: "POST",
+      path: "/vendors/form/generate-vendor-hash",
+      handler: "vendor.manualEntry",
+      config: {
+        policies: [],
+      },
+    },
+    {
       method: "PUT",
       path: "/vendors/form/:hash",
       handler: "vendor.updateVendor",

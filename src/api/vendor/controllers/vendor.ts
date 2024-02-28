@@ -121,5 +121,35 @@ export default factories.createCoreController(
 
       return vendor[0];
     },
+
+    async manualEntry(ctx) {
+      const vendor = await strapi.entityService.create("api::vendor.vendor", {
+        data: {
+          filled: false,
+        },
+      });
+
+      // Hash the vendor id and return it
+      const hash = encodeToURL(
+        crypto
+          .createHash("sha256")
+          .update(vendor.id.toString())
+          .digest("base64")
+      );
+
+      // Update the vendor's hash with the generated hash
+      const entry = await strapi.entityService.update(
+        "api::vendor.vendor",
+        vendor.id,
+        {
+          data: {
+            id: vendor.id,
+            hash: hash,
+          },
+        }
+      );
+
+      return entry;
+    },
   })
 );
