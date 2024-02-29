@@ -17,6 +17,10 @@
     },
     "mail": {
       "type": "email"
+    },
+    "secondarymails": {
+      "type": "json",
+      "required": false
     }
   }
 }

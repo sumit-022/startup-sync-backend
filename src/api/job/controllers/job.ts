@@ -198,6 +198,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             const cc = [
               process.env["CC_EMAIL"],
               vendor.salescontact?.mail,
+              ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
             ].filter((mail) => typeof mail === "string");
             if (cc.length === 0) return undefined;
             return cc;
@@ -296,6 +297,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             const cc = [
               process.env["CC_EMAIL"],
               vendor.salescontact?.mail,
+              ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
             ].filter((mail) => typeof mail === "string");
             if (cc.length === 0) return undefined;
             return cc;

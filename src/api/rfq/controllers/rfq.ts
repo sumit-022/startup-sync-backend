@@ -47,9 +47,11 @@ export default factories.createCoreController("api::rfq.rfq", ({ strapi }) => ({
     await strapi.plugins["email"].services.email.send({
       to: vendor.email,
       cc: (() => {
-        const cc = [process.env["CC_EMAIL"], vendor.salescontact?.mail].filter(
-          (mail) => typeof mail === "string"
-        );
+        const cc = [
+          process.env["CC_EMAIL"],
+          vendor.salescontact?.mail,
+          ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
+        ].filter((mail) => typeof mail === "string");
         if (cc.length === 0) return undefined;
         return cc;
       })(),
