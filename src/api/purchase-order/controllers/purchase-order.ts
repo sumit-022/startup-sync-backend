@@ -4,8 +4,6 @@
 
 import { factories } from "@strapi/strapi";
 import { getFormAttachments } from "../../../utils/form";
-import { uploadAndLinkDocument } from "../../../utils/upload";
-import fs from "fs";
 
 export default factories.createCoreController(
   "api::purchase-order.purchase-order",
@@ -40,27 +38,11 @@ export default factories.createCoreController(
           files: {
             attachments: Object.values(attachments),
           },
+          populate: ["attachments"],
         }
       );
 
-      // Upload attachments and link them to the purchase order
-      // const uploads = await Promise.allSettled(
-      //   Object.entries(attachments).map(([fileName, file]) => {
-      //     return new Promise((resolve, reject) => {
-      //       uploadAndLinkDocument(fs.readFileSync(file.path), {
-      //         extension: file.name.split(".").pop(),
-      //         filename: file.name,
-      //         mimeType: file.type,
-      //         refId: purchaseOrder.id,
-      //         ref: "api::spare.spare",
-      //         field: "attachments",
-      //       })
-      //         .then(resolve)
-      //         .catch(reject);
-      //     });
-      //   })
-      // );
-      return purchaseOrder;
+      return { ...purchaseOrder, vendorId, jobCode };
     },
   })
 );
