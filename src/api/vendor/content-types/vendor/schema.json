@@ -120,6 +120,9 @@
     "registered": {
       "type": "boolean",
       "default": false
+    },
+    "deliveryPorts": {
+      "type": "json"
     }
   }
 }

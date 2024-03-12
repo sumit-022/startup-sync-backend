@@ -769,6 +769,8 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::job.job'
     >;
+    phone: Attribute.String;
+    designation: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -860,6 +862,37 @@ export interface ApiCompanyCompany extends Schema.CollectionType {
   };
 }
 
+export interface ApiCurrencyCurrency extends Schema.CollectionType {
+  collectionName: 'currencies';
+  info: {
+    singularName: 'currency';
+    pluralName: 'currencies';
+    displayName: 'Currency';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    code: Attribute.String & Attribute.Required & Attribute.Unique;
+    rate: Attribute.Float & Attribute.Required & Attribute.DefaultTo<1>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::currency.currency',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::currency.currency',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiJobJob extends Schema.CollectionType {
   collectionName: 'jobs';
   info: {
@@ -921,12 +954,62 @@ export interface ApiJobJob extends Schema.CollectionType {
     poNumber: Attribute.String;
     notification: Attribute.Component<'jobs.notification'>;
     spares: Attribute.Relation<'api::job.job', 'oneToMany', 'api::spare.spare'>;
+    purchaseStatus: Attribute.Enumeration<
+      ['QUERYRECEIVED', 'RFQSENT', 'POISSUED', 'COMPLETED']
+    > &
+      Attribute.DefaultTo<'QUERYRECEIVED'>;
+    purchase_orders: Attribute.Relation<
+      'api::job.job',
+      'oneToMany',
+      'api::purchase-order.purchase-order'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::job.job', 'oneToOne', 'admin::user'> &
       Attribute.Private;
     updatedBy: Attribute.Relation<'api::job.job', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+  };
+}
+
+export interface ApiPurchaseOrderPurchaseOrder extends Schema.CollectionType {
+  collectionName: 'purchase_orders';
+  info: {
+    singularName: 'purchase-order';
+    pluralName: 'purchase-orders';
+    displayName: 'PurchaseOrder';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    job: Attribute.Relation<
+      'api::purchase-order.purchase-order',
+      'manyToOne',
+      'api::job.job'
+    >;
+    vendor: Attribute.Relation<
+      'api::purchase-order.purchase-order',
+      'oneToOne',
+      'api::vendor.vendor'
+    >;
+    attachments: Attribute.Media;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::purchase-order.purchase-order',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::purchase-order.purchase-order',
+      'oneToOne',
+      'admin::user'
+    > &
       Attribute.Private;
   };
 }
@@ -944,8 +1027,8 @@ export interface ApiRfqRfq extends Schema.CollectionType {
   };
   attributes: {
     RFQNumber: Attribute.String & Attribute.Required;
-    spare: Attribute.Relation<'api::rfq.rfq', 'oneToOne', 'api::spare.spare'>;
-    quotedPrice: Attribute.Integer & Attribute.Required;
+    spare: Attribute.Relation<'api::rfq.rfq', 'manyToOne', 'api::spare.spare'>;
+    total: Attribute.Decimal;
     selected: Attribute.Boolean &
       Attribute.Required &
       Attribute.DefaultTo<false>;
@@ -954,6 +1037,31 @@ export interface ApiRfqRfq extends Schema.CollectionType {
       'oneToOne',
       'api::vendor.vendor'
     >;
+    discount: Attribute.Decimal & Attribute.DefaultTo<0>;
+    unitPrice: Attribute.Decimal;
+    delivery: Attribute.Decimal;
+    deliveryTime: Attribute.Integer;
+    connectPort: Attribute.String;
+    remark: Attribute.Text;
+    quantity: Attribute.Component<'jobs.quantity'>;
+    amount: Attribute.Decimal;
+    filled: Attribute.Boolean & Attribute.Required & Attribute.DefaultTo<false>;
+    connectTime: Attribute.Decimal;
+    quality: Attribute.Enumeration<
+      [
+        'OEM-JAPAN',
+        'OEM-KOREA',
+        'OEM-CHINA',
+        'OTHEROEM',
+        'GENUINE',
+        'MAKERS',
+        'REPLACEMENT',
+        'COMPATIBLE'
+      ]
+    >;
+    currencyCode: Attribute.String &
+      Attribute.Required &
+      Attribute.DefaultTo<'USD'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1010,7 +1118,6 @@ export interface ApiSpareSpare extends Schema.CollectionType {
     title: Attribute.String & Attribute.Required;
     make: Attribute.String;
     model: Attribute.String;
-    rfq: Attribute.Relation<'api::spare.spare', 'oneToOne', 'api::rfq.rfq'>;
     job: Attribute.Relation<'api::spare.spare', 'manyToOne', 'api::job.job'>;
     quantity: Attribute.Integer &
       Attribute.Required &
@@ -1023,6 +1130,7 @@ export interface ApiSpareSpare extends Schema.CollectionType {
       Attribute.DefaultTo<1>;
     description: Attribute.Text;
     attachments: Attribute.Media;
+    rfqs: Attribute.Relation<'api::spare.spare', 'oneToMany', 'api::rfq.rfq'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1084,6 +1192,8 @@ export interface ApiVendorVendor extends Schema.CollectionType {
     country: Attribute.String;
     bankcode: Attribute.String;
     deliveryPort: Attribute.String;
+    registered: Attribute.Boolean & Attribute.DefaultTo<false>;
+    deliveryPorts: Attribute.JSON;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1122,7 +1232,9 @@ declare module '@strapi/types' {
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'api::agent.agent': ApiAgentAgent;
       'api::company.company': ApiCompanyCompany;
+      'api::currency.currency': ApiCurrencyCurrency;
       'api::job.job': ApiJobJob;
+      'api::purchase-order.purchase-order': ApiPurchaseOrderPurchaseOrder;
       'api::rfq.rfq': ApiRfqRfq;
       'api::service.service': ApiServiceService;
       'api::spare.spare': ApiSpareSpare;

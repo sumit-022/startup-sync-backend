@@ -25,6 +25,15 @@ export default {
       },
     },
     {
+      method: "PATCH",
+      path: "/vendors/migrate-delivery-ports",
+      handler: "vendor.migrateDeliveryPorts",
+      config: {
+        policies: [],
+      },
+    },
+    ,
+    {
       method: "PUT",
       path: "/vendors/form/:hash",
       handler: "vendor.updateVendor",

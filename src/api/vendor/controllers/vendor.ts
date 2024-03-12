@@ -154,6 +154,7 @@ export default factories.createCoreController(
       return entry;
     },
 
+    // TODO: Remove this handler
     async markAsRegistered(ctx) {
       // Update all the vendors with email filled to be registered
       const { magicWord } = ctx.request.body;
@@ -174,6 +175,45 @@ export default factories.createCoreController(
             registered: true,
           },
         });
+
+      return updatedVendors;
+    },
+
+    // TODO: Remove this after migration
+    async migrateDeliveryPorts(ctx) {
+      // Update all the vendors with email filled to be registered
+      const { magicWord } = ctx.request.body;
+
+      if (magicWord !== "pls update vendors") {
+        return ctx.badRequest("Invalid magic word");
+      }
+
+      const vendors = await strapi.entityService.findMany(
+        "api::vendor.vendor",
+        {
+          filters: {
+            deliveryPort: {
+              $notNull: true,
+            },
+            deliveryPorts: {
+              $null: true,
+            },
+          },
+        }
+      );
+
+      // Set the delivery ports to be an array of strings
+      const updatedVendors = await Promise.allSettled(
+        vendors.map((vendor) => {
+          return strapi.entityService.update("api::vendor.vendor", vendor.id, {
+            data: {
+              id: vendor.id,
+              deliveryPorts: [vendor.deliveryPort],
+              deliveryPort: null,
+            },
+          });
+        })
+      );
 
       return updatedVendors;
     },

@@ -15,6 +15,20 @@ export interface JobsNotification extends Schema.Component {
   };
 }
 
+export interface JobsQuantity extends Schema.Component {
+  collectionName: 'components_jobs_quantities';
+  info: {
+    displayName: 'quantity';
+    icon: 'chartCircle';
+    description: '';
+  };
+  attributes: {
+    value: Attribute.Decimal;
+    unit: Attribute.String;
+    unitDescription: Attribute.Text;
+  };
+}
+
 export interface JobsRfqForm extends Schema.Component {
   collectionName: 'components_jobs_rfq_forms';
   info: {
@@ -92,6 +106,7 @@ export interface PeopleContactPerson extends Schema.Component {
     mobile: Attribute.String;
     landline: Attribute.String;
     mail: Attribute.Email;
+    secondarymails: Attribute.JSON;
   };
 }
 
@@ -99,6 +114,7 @@ declare module '@strapi/types' {
   export module Shared {
     export interface Components {
       'jobs.notification': JobsNotification;
+      'jobs.quantity': JobsQuantity;
       'jobs.rfq-form': JobsRfqForm;
       'jobs.spare-details': JobsSpareDetails;
       'jobs.spare': JobsSpare;
