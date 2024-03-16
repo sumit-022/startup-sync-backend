@@ -3,6 +3,7 @@
  */
 
 import { factories } from "@strapi/strapi";
+import { convertQueryParams } from "@strapi/utils";
 
 export default factories.createCoreService("api::job.job", ({ strapi }) => ({
   async generateJobCode() {
@@ -72,8 +73,24 @@ export default factories.createCoreService("api::job.job", ({ strapi }) => ({
     // Calling the default core controller
     const { results, pagination } = await super.find(...args);
 
-    // Check ig rfqForms are asked to be populated
-    if (!args[0].populate || !args[0].populate.includes("rfqs")) {
+    // Check ig rfqForms are asked to be populated after parsing the args
+    const containsRfqPopulate = (() => {
+      if (args.length === 0 || !args[0].populate) return false;
+      const populateObj = convertQueryParams.convertPopulateQueryParams(
+        args[0].populate
+      );
+
+      if (Array.isArray(populateObj)) {
+        return populateObj.includes("rfqs");
+      }
+
+      // Check for *
+      if (Object.keys(populateObj).length === 0) return true;
+
+      return false;
+    })();
+
+    if (!containsRfqPopulate) {
       return { results, pagination };
     }
 
@@ -96,9 +113,9 @@ export default factories.createCoreService("api::job.job", ({ strapi }) => ({
     results.forEach((job, index) => {
       const rfqForm = rfqForms[index];
       if (rfqForm.status === "fulfilled") {
-        job.rfqForms = rfqForm.value;
+        job.rfqs = rfqForm.value;
       } else {
-        job.rfqForms = [];
+        job.rfqs = [];
       }
     });
 
