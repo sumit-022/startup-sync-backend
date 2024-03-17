@@ -8,7 +8,7 @@
     "description": ""
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -77,11 +77,7 @@
     },
     "ownership": {
       "type": "enumeration",
-      "enum": [
-        "PUBLIC",
-        "PRIVATE",
-        "GOVERNMENTOWNED"
-      ]
+      "enum": ["PUBLIC", "PRIVATE", "GOVERNMENTOWNED"]
     },
     "services": {
       "type": "relation",

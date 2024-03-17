@@ -8,7 +8,7 @@
     "description": ""
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -75,12 +75,7 @@
       "type": "media",
       "multiple": false,
       "required": false,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
+      "allowedTypes": ["images", "files", "videos", "audios"]
     },
     "assignedTo": {
       "type": "relation",
@@ -90,10 +85,7 @@
     },
     "type": {
       "type": "enumeration",
-      "enum": [
-        "SPARES SUPPLY",
-        "SERVICES"
-      ]
+      "enum": ["SPARES SUPPLY", "SERVICES"]
     },
     "agent": {
       "type": "relation",
@@ -123,12 +115,7 @@
     },
     "purchaseStatus": {
       "type": "enumeration",
-      "enum": [
-        "QUERYRECEIVED",
-        "RFQSENT",
-        "POISSUED",
-        "COMPLETED"
-      ],
+      "enum": ["QUERYRECEIVED", "RFQSENT", "POISSUED", "COMPLETED"],
       "default": "QUERYRECEIVED"
     },
     "purchase_orders": {
