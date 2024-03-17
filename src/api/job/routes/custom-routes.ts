@@ -16,5 +16,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "POST",
+      path: "/job/publish-all",
+      handler: "job.publishAll",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

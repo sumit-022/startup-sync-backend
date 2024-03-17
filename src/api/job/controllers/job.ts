@@ -329,4 +329,38 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       mails,
     };
   },
+
+  async publishAll(ctx) {
+    // Check for the magic word
+    const { magicWord } = ctx.request.body;
+    if (magicWord !== "pls publish all")
+      return ctx.badRequest("Invalid magic word");
+
+    const names = ctx.request.body.names || [];
+
+    if (!Array.isArray(names)) return ctx.badRequest("Invalid names array");
+
+    // Publish all the drafts :D
+    async function bulkPublishAll() {
+      return await Promise.allSettled(
+        names.map((name) =>
+          strapi.db.query(`api::${name}.${name}`).updateMany({
+            where: {
+              publishedAt: null,
+            },
+            data: {
+              publishedAt: new Date().toISOString(),
+            },
+          })
+        )
+      );
+    }
+
+    const publishState = await bulkPublishAll();
+
+    return {
+      message: "Published all drafts",
+      publishState,
+    };
+  },
 }));
