@@ -363,4 +363,44 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       publishState,
     };
   },
+
+  async notifyVendors(ctx) {
+    const { subject, body, ids } = ctx.request.body;
+
+    if (!subject || !body || !ids || Array.isArray(ids) === false)
+      return ctx.badRequest("Subject, body and emails are required");
+
+    // Fetch the vendors
+    const vendors = await strapi.entityService.findMany("api::vendor.vendor", {
+      filters: {
+        id: { $in: ids },
+      },
+      fields: ["id", "email"],
+      populate: ["salescontact"],
+    });
+
+    // Send mails to every vendor
+    const mails = await Promise.allSettled(
+      vendors.map((vendor) =>
+        strapi.plugins["email"].services.email.send({
+          to: vendor.email,
+          cc: (() => {
+            const cc = [
+              process.env["CC_EMAIL"],
+              vendor.salescontact?.mail,
+              ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
+            ].filter((mail) => typeof mail === "string");
+            if (cc.length === 0) return undefined;
+            return cc;
+          })(),
+          subject,
+          html: body,
+        })
+      )
+    );
+
+    return {
+      mails,
+    };
+  },
 }));

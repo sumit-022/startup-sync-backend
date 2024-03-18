@@ -24,5 +24,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "POST",
+      path: "/job/notify-vendors",
+      handler: "job.notifyVendors",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };
