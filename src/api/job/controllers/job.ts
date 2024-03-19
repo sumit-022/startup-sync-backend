@@ -437,7 +437,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       // Get the number of jobs with ORDERCONFIRMED status
       const jobsConfirmed = await strapi.entityService.count("api::job.job", {
         filters: {
-          purchaseStatus: "ORDERCONFIRMED",
+          status: "ORDERCONFIRMED",
           createdAt: {
             $gte: startDate,
             $lte: endDate,
@@ -456,7 +456,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             $lte: endDate,
           },
         },
-        select: ["createdAt", "purchaseStatus"],
+        select: ["createdAt", "status"],
       });
 
       if (agg === "day") {
@@ -464,7 +464,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const date = new Date(job.createdAt).toDateString();
           if (!acc[date]) acc[date] = { created: 0, confirmed: 0 };
           acc[date].created += 1;
-          if (job.purchaseStatus === "ORDERCONFIRMED") acc[date].confirmed += 1;
+          if (job.status === "ORDERCONFIRMED") acc[date].confirmed += 1;
           return acc;
         }, {} as Record<string, { created: number; confirmed: number }>);
 
@@ -477,7 +477,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const week = getWeek(date);
           if (!acc[week]) acc[week] = { created: 0, confirmed: 0 };
           acc[week].created += 1;
-          if (job.purchaseStatus === "ORDERCONFIRMED") acc[week].confirmed += 1;
+          if (job.status === "ORDERCONFIRMED") acc[week].confirmed += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number }>);
 
@@ -490,8 +490,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const month = date.getMonth();
           if (!acc[month]) acc[month] = { created: 0, confirmed: 0 };
           acc[month].created += 1;
-          if (job.purchaseStatus === "ORDERCONFIRMED")
-            acc[month].confirmed += 1;
+          if (job.status === "ORDERCONFIRMED") acc[month].confirmed += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number }>);
 
@@ -504,7 +503,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const year = date.getFullYear();
           if (!acc[year]) acc[year] = { created: 0, confirmed: 0 };
           acc[year].created += 1;
-          if (job.purchaseStatus === "ORDERCONFIRMED") acc[year].confirmed += 1;
+          if (job.status === "ORDERCONFIRMED") acc[year].confirmed += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number }>);
 
