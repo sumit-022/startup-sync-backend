@@ -406,11 +406,13 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   },
 
   async stats(ctx) {
-    const { startDate, endDate, aggregate } = ctx.query;
+    const { startDate, endDate, aggregate, userId } = ctx.query;
 
     const agg = aggregate
       ? (aggregate as "day" | "week" | "month" | "year" | "total")
       : "total";
+
+    const assignedTo = userId ? parseInt(userId) : undefined;
 
     if (!startDate || !endDate)
       return ctx.badRequest("Start date and end date are required");
@@ -431,6 +433,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             $gte: startDate,
             $lte: endDate,
           },
+          assignedTo,
         },
       });
 
@@ -442,11 +445,28 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             $gte: startDate,
             $lte: endDate,
           },
+          assignedTo,
         },
       });
+
+      // Get the number of jobs with QUOTEDTOCLIENT status
+      const jobsQuotedToClient = await strapi.entityService.count(
+        "api::job.job",
+        {
+          filters: {
+            status: "QUOTEDTOCLIENT",
+            createdAt: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+            assignedTo,
+          },
+        }
+      );
       return {
         created: jobsCreated,
         confirmed: jobsConfirmed,
+        quoted: jobsQuotedToClient,
       };
     } else {
       const jobs = await strapi.db.query("api::job.job").findMany({
@@ -455,6 +475,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             $gte: startDate,
             $lte: endDate,
           },
+          assignedTo,
         },
         select: ["createdAt", "status"],
       });
@@ -462,11 +483,12 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       if (agg === "day") {
         const data = jobs.reduce((acc, job) => {
           const date = new Date(job.createdAt).toDateString();
-          if (!acc[date]) acc[date] = { created: 0, confirmed: 0 };
+          if (!acc[date]) acc[date] = { created: 0, confirmed: 0, quoted: 0 };
           acc[date].created += 1;
           if (job.status === "ORDERCONFIRMED") acc[date].confirmed += 1;
+          if (job.status === "QUOTEDTOCLIENT") acc[date].quoted += 1;
           return acc;
-        }, {} as Record<string, { created: number; confirmed: number }>);
+        }, {} as Record<string, { created: number; confirmed: number; quoted: number }>);
 
         return { type: agg, aggregate: data };
       }
@@ -475,11 +497,12 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         const data = jobs.reduce((acc, job) => {
           const date = new Date(job.createdAt);
           const week = getWeek(date);
-          if (!acc[week]) acc[week] = { created: 0, confirmed: 0 };
+          if (!acc[week]) acc[week] = { created: 0, confirmed: 0, quoted: 0 };
           acc[week].created += 1;
           if (job.status === "ORDERCONFIRMED") acc[week].confirmed += 1;
+          if (job.status === "QUOTEDTOCLIENT") acc[week].quoted += 1;
           return acc;
-        }, {} as Record<number, { created: number; confirmed: number }>);
+        }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
 
         return { type: agg, aggregate: data };
       }
@@ -488,11 +511,12 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         const data = jobs.reduce((acc, job) => {
           const date = new Date(job.createdAt);
           const month = date.getMonth();
-          if (!acc[month]) acc[month] = { created: 0, confirmed: 0 };
+          if (!acc[month]) acc[month] = { created: 0, confirmed: 0, quoted: 0 };
           acc[month].created += 1;
           if (job.status === "ORDERCONFIRMED") acc[month].confirmed += 1;
+          if (job.status === "QUOTEDTOCLIENT") acc[month].quoted += 1;
           return acc;
-        }, {} as Record<number, { created: number; confirmed: number }>);
+        }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
 
         return { type: agg, aggregate: data };
       }
@@ -501,11 +525,12 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         const data = jobs.reduce((acc, job) => {
           const date = new Date(job.createdAt);
           const year = date.getFullYear();
-          if (!acc[year]) acc[year] = { created: 0, confirmed: 0 };
+          if (!acc[year]) acc[year] = { created: 0, confirmed: 0, quoted: 0 };
           acc[year].created += 1;
           if (job.status === "ORDERCONFIRMED") acc[year].confirmed += 1;
+          if (job.status === "QUOTEDTOCLIENT") acc[year].quoted += 1;
           return acc;
-        }, {} as Record<number, { created: number; confirmed: number }>);
+        }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
 
         return { type: agg, aggregate: data };
       }
