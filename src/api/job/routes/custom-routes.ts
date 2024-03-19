@@ -32,5 +32,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "GET",
+      path: "/jobs/stats",
+      handler: "job.stats",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

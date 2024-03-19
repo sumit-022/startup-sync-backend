@@ -9,6 +9,7 @@ import { encrypt } from "../../../utils/encode-decode";
 import { getFormAttachments } from "../../../utils/form";
 import { uploadAndLinkDocument } from "../../../utils/upload";
 import { getRFQMailContent } from "../../../utils/main-content";
+import { getWeek } from "../../../utils/date";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -402,5 +403,115 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     return {
       mails,
     };
+  },
+
+  async stats(ctx) {
+    const { startDate, endDate, aggregate } = ctx.query;
+
+    const agg = aggregate
+      ? (aggregate as "day" | "week" | "month" | "year" | "total")
+      : "total";
+
+    if (!startDate || !endDate)
+      return ctx.badRequest("Start date and end date are required");
+
+    try {
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+    } catch (err) {
+      return ctx.badRequest("Invalid date format");
+    }
+
+    // Divide the data into days, weeks, months or years
+    if (agg === "total") {
+      // Get the number of jobs created between the start and end date
+      const jobsCreated = await strapi.entityService.count("api::job.job", {
+        filters: {
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+      });
+
+      // Get the number of jobs with ORDERCONFIRMED status
+      const jobsConfirmed = await strapi.entityService.count("api::job.job", {
+        filters: {
+          purchaseStatus: "ORDERCONFIRMED",
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+      });
+      return {
+        created: jobsCreated,
+        confirmed: jobsConfirmed,
+      };
+    } else {
+      const jobs = await strapi.db.query("api::job.job").findMany({
+        where: {
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+        select: ["createdAt", "purchaseStatus"],
+      });
+
+      if (agg === "day") {
+        const data = jobs.reduce((acc, job) => {
+          const date = new Date(job.createdAt).toDateString();
+          if (!acc[date]) acc[date] = { created: 0, confirmed: 0 };
+          acc[date].created += 1;
+          if (job.purchaseStatus === "ORDERCONFIRMED") acc[date].confirmed += 1;
+          return acc;
+        }, {} as Record<string, { created: number; confirmed: number }>);
+
+        return { type: agg, aggregate: data };
+      }
+
+      if (agg === "week") {
+        const data = jobs.reduce((acc, job) => {
+          const date = new Date(job.createdAt);
+          const week = getWeek(date);
+          if (!acc[week]) acc[week] = { created: 0, confirmed: 0 };
+          acc[week].created += 1;
+          if (job.purchaseStatus === "ORDERCONFIRMED") acc[week].confirmed += 1;
+          return acc;
+        }, {} as Record<number, { created: number; confirmed: number }>);
+
+        return { type: agg, aggregate: data };
+      }
+
+      if (agg === "month") {
+        const data = jobs.reduce((acc, job) => {
+          const date = new Date(job.createdAt);
+          const month = date.getMonth();
+          if (!acc[month]) acc[month] = { created: 0, confirmed: 0 };
+          acc[month].created += 1;
+          if (job.purchaseStatus === "ORDERCONFIRMED")
+            acc[month].confirmed += 1;
+          return acc;
+        }, {} as Record<number, { created: number; confirmed: number }>);
+
+        return { type: agg, aggregate: data };
+      }
+
+      if (agg === "year") {
+        const data = jobs.reduce((acc, job) => {
+          const date = new Date(job.createdAt);
+          const year = date.getFullYear();
+          if (!acc[year]) acc[year] = { created: 0, confirmed: 0 };
+          acc[year].created += 1;
+          if (job.purchaseStatus === "ORDERCONFIRMED") acc[year].confirmed += 1;
+          return acc;
+        }, {} as Record<number, { created: number; confirmed: number }>);
+
+        return { type: agg, aggregate: data };
+      }
+
+      return ctx.badRequest("Invalid aggregate");
+    }
   },
 }));
