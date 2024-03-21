@@ -654,4 +654,27 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       return ctx.badRequest("Invalid aggregate");
     }
   },
+
+  async statsByCompanies(ctx) {
+    const { n: nStr } = ctx.query;
+
+    const n = parseInt(nStr ?? "10") ?? 10;
+
+    // Largest companies by number of jobs
+    const knex = strapi.db.connection;
+
+    const { rows: companies } =
+      await knex.raw(`SELECT companies.id, companies.name, COUNT(jobs.id) AS job_count
+FROM companies
+JOIN jobs_company_links ON companies.id = jobs_company_links.company_id
+JOIN jobs ON jobs_company_links.job_id = jobs.id
+GROUP BY companies.id, companies.name
+ORDER BY job_count DESC
+LIMIT ${n};
+`);
+
+    return {
+      companies,
+    };
+  },
 }));

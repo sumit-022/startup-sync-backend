@@ -40,5 +40,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "GET",
+      path: "/jobs/stats/companies",
+      handler: "job.statsByCompanies",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };
