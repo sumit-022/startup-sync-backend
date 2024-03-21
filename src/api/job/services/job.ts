@@ -121,4 +121,45 @@ export default factories.createCoreService("api::job.job", ({ strapi }) => ({
 
     return { results, pagination };
   },
+
+  async findOne(...args) {
+    const result = await super.findOne(...args);
+
+    // Check ig rfqForms are asked to be populated after parsing the args
+    const containsRfqPopulate = (() => {
+      if (args.length === 0 || !args[1].populate) return false;
+      const populateObj = convertQueryParams.convertPopulateQueryParams(
+        args[1].populate
+      );
+
+      if (Array.isArray(populateObj)) {
+        return populateObj.includes("rfqs");
+      }
+
+      // Check for *
+      if (Object.keys(populateObj).length === 0) return true;
+
+      return false;
+    })();
+
+    if (!containsRfqPopulate || !result) {
+      return result;
+    }
+
+    const rfqForms = await strapi.query("api::rfq.rfq").findMany({
+      where: {
+        RFQNumber: `RFQ-${result.jobCode}`,
+      },
+      populate: {
+        vendor: {
+          select: ["id", "name", "email"],
+        },
+      },
+      select: ["id", "RFQNumber", "filled"],
+    });
+
+    result.rfqs = rfqForms;
+
+    return result;
+  },
 }));
