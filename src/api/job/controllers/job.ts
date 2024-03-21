@@ -48,7 +48,6 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
 
     // Get the jobcode from the request body
     let { jobId: id } = ctx.request.body;
-    const spareDetails = JSON.parse(ctx.request.body.spareDetails) as any[];
     const vendors = JSON.parse(ctx.request.body.vendors) as Vendor[];
     const files = ctx.request.files;
 
@@ -60,7 +59,6 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     }
 
     const vendorAttachments = getFormAttachments(files, "vendorAttachments");
-    const spareMedia = getFormAttachments(files, "spareAttachments");
 
     const buffers = Object.fromEntries(
       Object.entries(vendorAttachments).map(([name, file]) => [
@@ -107,6 +105,8 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       return ctx.badRequest("Invalid vendor id");
 
     if (job.purchaseStatus !== "RFQSENT") {
+      const spareDetails = JSON.parse(ctx.request.body.spareDetails) as any[];
+      const spareMedia = getFormAttachments(files, "spareAttachments");
       // Create the spares
       const spares = await Promise.allSettled(
         spareDetails.map((spareDetail: any) =>
