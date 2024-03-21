@@ -281,17 +281,15 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         vendors
           .map((vendor) =>
             spares
-              .map(({ status, value: spareDetail }: any) =>
-                status === "fulfilled"
-                  ? strapi.entityService.create("api::rfq.rfq", {
-                      data: {
-                        RFQNumber: rfqNumber,
-                        spare: spareDetail.id,
-                        quotedPrice: 0,
-                        vendor: vendor.id,
-                      },
-                    })
-                  : undefined
+              .map((spareDetail) =>
+                strapi.entityService.create("api::rfq.rfq", {
+                  data: {
+                    RFQNumber: rfqNumber,
+                    spare: spareDetail.id,
+                    quotedPrice: 0,
+                    vendor: vendor.id,
+                  },
+                })
               )
               .filter((x) => x !== undefined)
           )
