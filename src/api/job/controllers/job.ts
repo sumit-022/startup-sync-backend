@@ -72,7 +72,9 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     if (!id) return ctx.badRequest("Job id is required");
 
     // Get the job
-    const job = await strapi.entityService.findOne("api::job.job", id);
+    const job = await strapi.entityService.findOne("api::job.job", id, {
+      populate: ["spares"],
+    });
 
     if (!job) return ctx.notFound("Job not found");
 
@@ -104,166 +106,272 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     if (!Array.isArray(vendorMails) || vendorMails.length !== vendors.length)
       return ctx.badRequest("Invalid vendor id");
 
-    // Create the spares
-    const spares = await Promise.allSettled(
-      spareDetails.map((spareDetail: any) =>
-        strapi.entityService.create("api::spare.spare", {
-          data: {
-            title: spareDetail.title,
-            make: spareDetail.make,
-            model: spareDetail.model,
-            job: job.id,
-            quantity: spareDetail.quantity,
-            description: spareDetail.description,
-          },
-        })
-      )
-    );
-
-    const unSettledSpares = spares.filter(
-      ({ status }) => status === "rejected"
-    );
-
-    // Upload the media for each spare
-    const spareMediaUploads = await Promise.allSettled(
-      (spares as any)
-        .map(({ status, value: spare }, idx: number) => {
-          if (
-            status === "rejected" ||
-            !Array.isArray(spareDetails[idx].attachments)
-          )
-            return undefined;
-          const media = spareDetails[idx].attachments
-            .map((name: string) => spareMedia[name])
-            .filter((x) => x !== undefined);
-          if (media.length === 0) return undefined;
-
-          return media.map(
-            (m) =>
-              new Promise((resolve, reject) => {
-                uploadAndLinkDocument(fs.readFileSync(m.path), {
-                  extension: m.name.split(".").pop(),
-                  filename: m.name,
-                  mimeType: m.type,
-                  refId: spare.id,
-                  ref: "api::spare.spare",
-                  field: "attachments",
-                })
-                  .then(resolve)
-                  .catch(reject);
-              })
-          );
-        })
-        .flat()
-        .filter((x) => x !== undefined)
-    );
-
-    const unSettledSpareMediaUploads = spareMediaUploads.filter(
-      ({ status }) => status === "rejected"
-    );
-
-    // Generate the RFQ number
-    const rfqNumber = strapi
-      .service("api::job.job")
-      .generateRFQNumber(job.jobCode);
-
-    // Generate a draft RFQ form for each vendor and each spare
-    const rfqForms = await Promise.allSettled(
-      vendors
-        .map((vendor) =>
-          spares
-            .map(({ status, value: spareDetail }: any) =>
-              status === "fulfilled"
-                ? strapi.entityService.create("api::rfq.rfq", {
-                    data: {
-                      RFQNumber: rfqNumber,
-                      spare: spareDetail.id,
-                      quotedPrice: 0,
-                      vendor: vendor.id,
-                    },
-                  })
-                : undefined
-            )
-            .filter((x) => x !== undefined)
+    if (job.purchaseStatus !== "RFQSENT") {
+      // Create the spares
+      const spares = await Promise.allSettled(
+        spareDetails.map((spareDetail: any) =>
+          strapi.entityService.create("api::spare.spare", {
+            data: {
+              title: spareDetail.title,
+              make: spareDetail.make,
+              model: spareDetail.model,
+              job: job.id,
+              quantity: spareDetail.quantity,
+              description: spareDetail.description,
+            },
+          })
         )
-        .filter((x) => x.length !== 0)
-        .flat()
-    );
+      );
+      const unSettledSpares = spares.filter(
+        ({ status }) => status === "rejected"
+      );
 
-    const unSettledRFQForms = rfqForms.filter(
-      ({ status }) => status === "rejected"
-    );
-
-    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "";
-
-    if (ENCRYPTION_KEY === "") {
-      console.warn("Encryption key not set");
-    }
-
-    // Send mails to every vendor
-    const mails = await Promise.allSettled(
-      vendorMails.map((vendor) =>
-        strapi.plugins["email"].services.email.send({
-          to: (vendor as any).email,
-          cc: (() => {
-            const cc = [
-              process.env["CC_EMAIL"],
-              vendor.salescontact?.mail,
-              ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
-            ].filter((mail) => typeof mail === "string");
-            if (cc.length === 0) return undefined;
-            return cc;
-          })(),
-          subject: `${rfqNumber} - ${job.description || ""}`,
-          html:
-            getRFQMailContent({
-              link: `${origin}/vendor/form/rfq/${encrypt(
-                rfqNumber,
-                ENCRYPTION_KEY
-              )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
-              port: job.targetPort,
-              eta: job.vesselETA
-                ? new Date(job.vesselETA).toDateString()
-                : undefined,
-            }) + (ctx.request.body.mailFooter || ""),
-          attachments: (() => {
-            const attachment = vendors.find(
-              (v) => v.id === vendor.id
-            )?.attachment;
-            if (!attachment || !vendorAttachments?.[attachment])
+      // Upload the media for each spare
+      const spareMediaUploads = await Promise.allSettled(
+        (spares as any)
+          .map(({ status, value: spare }, idx: number) => {
+            if (
+              status === "rejected" ||
+              !Array.isArray(spareDetails[idx].attachments)
+            )
               return undefined;
-            return [
-              {
-                filename: vendorAttachments[attachment].name,
-                content: buffers[attachment],
-              },
-            ];
-          })(),
-        })
-      )
-    );
+            const media = spareDetails[idx].attachments
+              .map((name: string) => spareMedia[name])
+              .filter((x) => x !== undefined);
+            if (media.length === 0) return undefined;
 
-    const unSettledMails = mails.filter(({ status }) => status === "rejected");
+            return media.map(
+              (m) =>
+                new Promise((resolve, reject) => {
+                  uploadAndLinkDocument(fs.readFileSync(m.path), {
+                    extension: m.name.split(".").pop(),
+                    filename: m.name,
+                    mimeType: m.type,
+                    refId: spare.id,
+                    ref: "api::spare.spare",
+                    field: "attachments",
+                  })
+                    .then(resolve)
+                    .catch(reject);
+                })
+            );
+          })
+          .flat()
+          .filter((x) => x !== undefined)
+      );
 
-    // Update the job status
-    await strapi.entityService.update("api::job.job", job.id, {
-      data: {
-        id: job.id,
-        purchaseStatus: "RFQSENT",
-        RFQNumber: rfqNumber,
-      },
-    });
+      const unSettledSpareMediaUploads = spareMediaUploads.filter(
+        ({ status }) => status === "rejected"
+      );
 
-    return {
-      spares,
-      spareMediaUploads,
-      rfqForms,
-      mails,
-      unSettledSpares,
-      unSettledSpareMediaUploads,
-      unSettledRFQForms,
-      unSettledMails,
-    };
+      // Generate the RFQ number
+      const rfqNumber = strapi
+        .service("api::job.job")
+        .generateRFQNumber(job.jobCode);
+
+      // Generate a draft RFQ form for each vendor and each spare
+      const rfqForms = await Promise.allSettled(
+        vendors
+          .map((vendor) =>
+            spares
+              .map(({ status, value: spareDetail }: any) =>
+                status === "fulfilled"
+                  ? strapi.entityService.create("api::rfq.rfq", {
+                      data: {
+                        RFQNumber: rfqNumber,
+                        spare: spareDetail.id,
+                        quotedPrice: 0,
+                        vendor: vendor.id,
+                      },
+                    })
+                  : undefined
+              )
+              .filter((x) => x !== undefined)
+          )
+          .filter((x) => x.length !== 0)
+          .flat()
+      );
+
+      const unSettledRFQForms = rfqForms.filter(
+        ({ status }) => status === "rejected"
+      );
+
+      const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "";
+
+      if (ENCRYPTION_KEY === "") {
+        console.warn("Encryption key not set");
+      }
+
+      // Send mails to every vendor
+      const mails = await Promise.allSettled(
+        vendorMails.map((vendor) =>
+          strapi.plugins["email"].services.email.send({
+            to: (vendor as any).email,
+            cc: (() => {
+              const cc = [
+                process.env["CC_EMAIL"],
+                vendor.salescontact?.mail,
+                ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
+              ].filter((mail) => typeof mail === "string");
+              if (cc.length === 0) return undefined;
+              return cc;
+            })(),
+            subject: `${rfqNumber} - ${job.description || ""}`,
+            html:
+              getRFQMailContent({
+                link: `${origin}/vendor/form/rfq/${encrypt(
+                  rfqNumber,
+                  ENCRYPTION_KEY
+                )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
+                port: job.targetPort,
+                eta: job.vesselETA
+                  ? new Date(job.vesselETA).toDateString()
+                  : undefined,
+              }) + (ctx.request.body.mailFooter || ""),
+            attachments: (() => {
+              const attachment = vendors.find(
+                (v) => v.id === vendor.id
+              )?.attachment;
+              if (!attachment || !vendorAttachments?.[attachment])
+                return undefined;
+              return [
+                {
+                  filename: vendorAttachments[attachment].name,
+                  content: buffers[attachment],
+                },
+              ];
+            })(),
+          })
+        )
+      );
+
+      const unSettledMails = mails.filter(
+        ({ status }) => status === "rejected"
+      );
+
+      // Update the job status
+      await strapi.entityService.update("api::job.job", job.id, {
+        data: {
+          id: job.id,
+          purchaseStatus: "RFQSENT",
+          RFQNumber: rfqNumber,
+        },
+      });
+
+      return {
+        spares,
+        spareMediaUploads,
+        rfqForms,
+        mails,
+        unSettledSpares,
+        unSettledSpareMediaUploads,
+        unSettledRFQForms,
+        unSettledMails,
+      };
+    } else {
+      // Generate the RFQ number
+      const rfqNumber = strapi
+        .service("api::job.job")
+        .generateRFQNumber(job.jobCode);
+
+      const spares = job.spares;
+
+      // Generate a draft RFQ form for each vendor and each spare
+      const rfqForms = await Promise.allSettled(
+        vendors
+          .map((vendor) =>
+            spares
+              .map(({ status, value: spareDetail }: any) =>
+                status === "fulfilled"
+                  ? strapi.entityService.create("api::rfq.rfq", {
+                      data: {
+                        RFQNumber: rfqNumber,
+                        spare: spareDetail.id,
+                        quotedPrice: 0,
+                        vendor: vendor.id,
+                      },
+                    })
+                  : undefined
+              )
+              .filter((x) => x !== undefined)
+          )
+          .filter((x) => x.length !== 0)
+          .flat()
+      );
+
+      const unSettledRFQForms = rfqForms.filter(
+        ({ status }) => status === "rejected"
+      );
+
+      const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "";
+
+      if (ENCRYPTION_KEY === "") {
+        console.warn("Encryption key not set");
+      }
+
+      // Send mails to every vendor
+      const mails = await Promise.allSettled(
+        vendorMails.map((vendor) =>
+          strapi.plugins["email"].services.email.send({
+            to: (vendor as any).email,
+            cc: (() => {
+              const cc = [
+                process.env["CC_EMAIL"],
+                vendor.salescontact?.mail,
+                ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
+              ].filter((mail) => typeof mail === "string");
+              if (cc.length === 0) return undefined;
+              return cc;
+            })(),
+            subject: `${rfqNumber} - ${job.description || ""}`,
+            html:
+              getRFQMailContent({
+                link: `${origin}/vendor/form/rfq/${encrypt(
+                  rfqNumber,
+                  ENCRYPTION_KEY
+                )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
+                port: job.targetPort,
+                eta: job.vesselETA
+                  ? new Date(job.vesselETA).toDateString()
+                  : undefined,
+              }) + (ctx.request.body.mailFooter || ""),
+            attachments: (() => {
+              const attachment = vendors.find(
+                (v) => v.id === vendor.id
+              )?.attachment;
+              if (!attachment || !vendorAttachments?.[attachment])
+                return undefined;
+              return [
+                {
+                  filename: vendorAttachments[attachment].name,
+                  content: buffers[attachment],
+                },
+              ];
+            })(),
+          })
+        )
+      );
+
+      const unSettledMails = mails.filter(
+        ({ status }) => status === "rejected"
+      );
+
+      // Update the job status
+      await strapi.entityService.update("api::job.job", job.id, {
+        data: {
+          id: job.id,
+          purchaseStatus: "RFQSENT",
+          RFQNumber: rfqNumber,
+        },
+      });
+
+      return {
+        rfqForms,
+        mails,
+        unSettledRFQForms,
+        unSettledMails,
+      };
+    }
   },
   async sendPO(ctx) {
     type Vendor = {
