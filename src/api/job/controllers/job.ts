@@ -540,28 +540,27 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       return ctx.badRequest("Invalid date format");
     }
 
+    const filters = {
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    };
+
+    if (assignedTo) filters["assignedTo"] = assignedTo;
+
     // Divide the data into days, weeks, months or years
     if (agg === "total") {
       // Get the number of jobs created between the start and end date
       const jobsCreated = await strapi.entityService.count("api::job.job", {
-        filters: {
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-          assignedTo,
-        },
+        filters,
       });
 
       // Get the number of jobs with ORDERCONFIRMED status
       const jobsConfirmed = await strapi.entityService.count("api::job.job", {
         filters: {
           status: "ORDERCONFIRMED",
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-          assignedTo,
+          ...filters,
         },
       });
 
@@ -571,11 +570,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         {
           filters: {
             status: "QUOTEDTOCLIENT",
-            createdAt: {
-              $gte: startDate,
-              $lte: endDate,
-            },
-            assignedTo,
+            ...filters,
           },
         }
       );
@@ -586,13 +581,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       };
     } else {
       const jobs = await strapi.db.query("api::job.job").findMany({
-        where: {
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-          assignedTo,
-        },
+        where: filters,
         select: ["createdAt", "status"],
       });
 
