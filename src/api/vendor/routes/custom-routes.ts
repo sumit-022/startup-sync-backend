@@ -32,10 +32,9 @@ export default {
         policies: [],
       },
     },
-    ,
     {
       method: "PUT",
-      path: "/vendors/form/:hash",
+      path: "/vendors/form/update/:hash",
       handler: "vendor.updateVendor",
       config: {
         policies: [],
