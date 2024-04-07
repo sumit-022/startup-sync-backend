@@ -482,10 +482,22 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   },
 
   async notifyVendors(ctx) {
-    const { subject, body, ids } = ctx.request.body;
+    const bodies: {
+      [id: string]: {
+        subject: string;
+        body: string;
+      };
+    } = ctx.request.body.bodies;
 
-    if (!subject || !body || !ids || Array.isArray(ids) === false)
-      return ctx.badRequest("Subject, body and emails are required");
+    const ids = Object.keys(bodies).map((id) => parseInt(id));
+
+    for (const id in bodies) {
+      if (
+        typeof bodies[id].subject !== "string" ||
+        typeof bodies[id].body !== "string"
+      )
+        return ctx.badRequest("Invalid body format");
+    }
 
     // Fetch the vendors
     const vendors = await strapi.entityService.findMany("api::vendor.vendor", {
@@ -510,8 +522,8 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             if (cc.length === 0) return undefined;
             return cc;
           })(),
-          subject,
-          html: body,
+          subject: bodies[vendor.id].subject,
+          html: bodies[vendor.id].body,
         })
       )
     );
