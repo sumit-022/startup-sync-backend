@@ -512,6 +512,12 @@ export interface PluginContentReleasesRelease extends Schema.CollectionType {
   attributes: {
     name: Attribute.String & Attribute.Required;
     releasedAt: Attribute.DateTime;
+    scheduledAt: Attribute.DateTime;
+    timezone: Attribute.String;
+    status: Attribute.Enumeration<
+      ['ready', 'blocked', 'failed', 'done', 'empty']
+    > &
+      Attribute.Required;
     actions: Attribute.Relation<
       'plugin::content-releases.release',
       'oneToMany',
@@ -566,6 +572,7 @@ export interface PluginContentReleasesReleaseAction
       'manyToOne',
       'plugin::content-releases.release'
     >;
+    isEntryValid: Attribute.Boolean;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -797,7 +804,7 @@ export interface ApiAgentAgent extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     name: Attribute.String & Attribute.Required;
@@ -806,7 +813,6 @@ export interface ApiAgentAgent extends Schema.CollectionType {
     jobs: Attribute.Relation<'api::agent.agent', 'oneToMany', 'api::job.job'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::agent.agent',
       'oneToOne',
@@ -831,7 +837,7 @@ export interface ApiCompanyCompany extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     name: Attribute.String & Attribute.Required;
@@ -846,7 +852,6 @@ export interface ApiCompanyCompany extends Schema.CollectionType {
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::company.company',
       'oneToOne',
@@ -902,7 +907,7 @@ export interface ApiJobJob extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     title: Attribute.String;
@@ -917,7 +922,8 @@ export interface ApiJobJob extends Schema.CollectionType {
         'ORDERCONFIRMED',
         'JOBCOMPLETED',
         'JOBCANCELLED',
-        'PODAWAITED'
+        'PODAWAITED',
+        'INVOICEAWAITED'
       ]
     > &
       Attribute.Required &
@@ -963,9 +969,9 @@ export interface ApiJobJob extends Schema.CollectionType {
       'oneToMany',
       'api::purchase-order.purchase-order'
     >;
+    jobClosedStatus: Attribute.Enumeration<['JOBCANCELLED', 'JOBCOMPLETED']>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::job.job', 'oneToOne', 'admin::user'> &
       Attribute.Private;
     updatedBy: Attribute.Relation<'api::job.job', 'oneToOne', 'admin::user'> &
@@ -982,7 +988,7 @@ export interface ApiPurchaseOrderPurchaseOrder extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     job: Attribute.Relation<
@@ -998,7 +1004,6 @@ export interface ApiPurchaseOrderPurchaseOrder extends Schema.CollectionType {
     attachments: Attribute.Media;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::purchase-order.purchase-order',
       'oneToOne',
@@ -1023,7 +1028,7 @@ export interface ApiRfqRfq extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     RFQNumber: Attribute.String & Attribute.Required;
@@ -1064,7 +1069,6 @@ export interface ApiRfqRfq extends Schema.CollectionType {
       Attribute.DefaultTo<'USD'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::rfq.rfq', 'oneToOne', 'admin::user'> &
       Attribute.Private;
     updatedBy: Attribute.Relation<'api::rfq.rfq', 'oneToOne', 'admin::user'> &
@@ -1081,13 +1085,12 @@ export interface ApiServiceService extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     title: Attribute.String & Attribute.Required & Attribute.Unique;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::service.service',
       'oneToOne',
@@ -1112,7 +1115,7 @@ export interface ApiSpareSpare extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     title: Attribute.String & Attribute.Required;
@@ -1133,7 +1136,6 @@ export interface ApiSpareSpare extends Schema.CollectionType {
     rfqs: Attribute.Relation<'api::spare.spare', 'oneToMany', 'api::rfq.rfq'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::spare.spare',
       'oneToOne',
@@ -1158,7 +1160,7 @@ export interface ApiVendorVendor extends Schema.CollectionType {
     description: '';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     name: Attribute.String;
@@ -1196,7 +1198,6 @@ export interface ApiVendorVendor extends Schema.CollectionType {
     deliveryPorts: Attribute.JSON;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::vendor.vendor',
       'oneToOne',

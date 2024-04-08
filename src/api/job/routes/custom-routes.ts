@@ -48,5 +48,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "PATCH",
+      path: "/jobs/migrate-status",
+      handler: "job.migrateStatus",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

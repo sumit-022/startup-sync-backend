@@ -10,6 +10,7 @@ import { getFormAttachments } from "../../../utils/form";
 import { uploadAndLinkDocument } from "../../../utils/upload";
 import { getRFQMailContent } from "../../../utils/main-content";
 import { getWeek } from "../../../utils/date";
+import { ORDERED_JOB_STATUS, isOrderConfirmed } from "../../../utils/jobStatus";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -571,7 +572,11 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       // Get the number of jobs with ORDERCONFIRMED status
       const jobsConfirmed = await strapi.entityService.count("api::job.job", {
         filters: {
-          status: "ORDERCONFIRMED",
+          status: {
+            $in: ORDERED_JOB_STATUS.slice(
+              ORDERED_JOB_STATUS.indexOf("ORDERCONFIRMED")
+            ),
+          },
           ...filters,
         },
       });
@@ -602,7 +607,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const date = new Date(job.createdAt).toDateString();
           if (!acc[date]) acc[date] = { created: 0, confirmed: 0, quoted: 0 };
           acc[date].created += 1;
-          if (job.status === "ORDERCONFIRMED") acc[date].confirmed += 1;
+          if (isOrderConfirmed(job.status)) acc[date].confirmed += 1;
           if (job.status === "QUOTEDTOCLIENT") acc[date].quoted += 1;
           return acc;
         }, {} as Record<string, { created: number; confirmed: number; quoted: number }>);
@@ -616,7 +621,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const week = getWeek(date);
           if (!acc[week]) acc[week] = { created: 0, confirmed: 0, quoted: 0 };
           acc[week].created += 1;
-          if (job.status === "ORDERCONFIRMED") acc[week].confirmed += 1;
+          if (isOrderConfirmed(job.status)) acc[week].confirmed += 1;
           if (job.status === "QUOTEDTOCLIENT") acc[week].quoted += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
@@ -630,7 +635,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const month = date.getMonth();
           if (!acc[month]) acc[month] = { created: 0, confirmed: 0, quoted: 0 };
           acc[month].created += 1;
-          if (job.status === "ORDERCONFIRMED") acc[month].confirmed += 1;
+          if (isOrderConfirmed(job.status)) acc[month].confirmed += 1;
           if (job.status === "QUOTEDTOCLIENT") acc[month].quoted += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
@@ -644,7 +649,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           const year = date.getFullYear();
           if (!acc[year]) acc[year] = { created: 0, confirmed: 0, quoted: 0 };
           acc[year].created += 1;
-          if (job.status === "ORDERCONFIRMED") acc[year].confirmed += 1;
+          if (isOrderConfirmed(job.status)) acc[year].confirmed += 1;
           if (job.status === "QUOTEDTOCLIENT") acc[year].quoted += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
@@ -676,6 +681,77 @@ LIMIT ${n};
 
     return {
       companies,
+    };
+  },
+
+  async migrateStatus(ctx) {
+    // Check for the magic word
+    const { magicWord } = ctx.request.body;
+    if (magicWord !== "pls migrate status") {
+      return ctx.badRequest("Invalid magic word");
+    }
+
+    const cancelledJobs = await strapi.entityService.findMany("api::job.job", {
+      filters: {
+        status: "JOBCANCELLED",
+      },
+    });
+
+    const migratedCancelledJobs = await Promise.allSettled(
+      cancelledJobs.map((job) =>
+        strapi.entityService.update("api::job.job", job.id, {
+          data: {
+            id: job.id,
+            status: "QUERYRECEIVED",
+            jobClosedStatus: "JOBCANCELLED",
+          },
+        })
+      )
+    );
+
+    // Marked as completed
+    const jobsMarkedAsCompleted = await strapi.entityService.findMany(
+      "api::job.job",
+      {
+        filters: {
+          status: "JOBCOMPLETED",
+        },
+      }
+    );
+
+    const migratedJobsMarkedAsCompleted = await Promise.allSettled(
+      jobsMarkedAsCompleted.map((job) =>
+        strapi.entityService.update("api::job.job", job.id, {
+          data: {
+            id: job.id,
+            status: "INVOICEAWAITED",
+          },
+        })
+      )
+    );
+
+    // Get all the completed jobs
+    const completedJobs = await strapi.entityService.findMany("api::job.job", {
+      filters: {
+        jobCompleted: true,
+      },
+    });
+
+    const migratedCompletedJobs = await Promise.allSettled(
+      completedJobs.map((job) =>
+        strapi.entityService.update("api::job.job", job.id, {
+          data: {
+            id: job.id,
+            jobClosedStatus: "JOBCOMPLETED",
+          },
+        })
+      )
+    );
+
+    return {
+      migratedCompletedJobs,
+      migratedCancelledJobs,
+      migratedJobsMarkedAsCompleted,
     };
   },
 }));
