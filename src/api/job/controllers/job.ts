@@ -72,7 +72,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
 
     // Get the job
     const job = await strapi.entityService.findOne("api::job.job", id, {
-      populate: ["spares"],
+      populate: ["spares", "spares.attachments"],
     });
 
     if (!job) return ctx.notFound("Job not found");
@@ -144,9 +144,12 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
             return media.map(
               (m) =>
                 new Promise((resolve, reject) => {
+                  const filename = m.name.split(".");
+                  filename.pop();
+                  const extension = m.name.split(".").pop();
                   uploadAndLinkDocument(fs.readFileSync(m.path), {
-                    extension: m.name.split(".").pop(),
-                    filename: m.name,
+                    extension,
+                    filename: filename.join(""),
                     mimeType: m.type,
                     refId: spare.id,
                     ref: "api::spare.spare",
@@ -204,6 +207,31 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       }
 
       // Send mails to every vendor
+      // Upload the media for each spare
+      const spareMediaAttachments = (spares as any)
+        .map(({ status, value: spare }, idx: number) => {
+          if (
+            status === "rejected" ||
+            !Array.isArray(spareDetails[idx].attachments)
+          )
+            return undefined;
+          const media = spareDetails[idx].attachments
+            .map((name: string) => spareMedia[name])
+            .filter((x) => x !== undefined);
+          if (media.length === 0) return undefined;
+
+          return media.map((m, idx) => {
+            const fileName = m.name.split(".");
+            const ext = fileName.pop();
+            return {
+              filename: `spare-${fileName.join("")}-${idx + 1}.${ext}`,
+              content: fs.readFileSync(m.path),
+            };
+          });
+        })
+        .flat()
+        .filter((x) => x !== undefined);
+
       const mails = await Promise.allSettled(
         vendorMails.map((vendor) =>
           strapi.plugins["email"].services.email.send({
@@ -240,6 +268,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
                   filename: vendorAttachments[attachment].name,
                   content: buffers[attachment],
                 },
+                ...spareMediaAttachments,
               ];
             })(),
           })
@@ -308,6 +337,19 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         console.warn("Encryption key not set");
       }
 
+      const spareMediaAttachments = (spares as any)
+        .map((spare) => {
+          if (!Array.isArray(spare.attachments)) return undefined;
+          const media = spare.attachments;
+
+          return media.map((m, idx) => ({
+            filename: `spare-${m.name}-${idx + 1}.${m.ext}`,
+            content: m.url,
+          }));
+        })
+        .flat()
+        .filter((x) => x !== undefined);
+
       // Send mails to every vendor
       const mails = await Promise.allSettled(
         vendorMails.map((vendor) =>
@@ -345,6 +387,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
                   filename: vendorAttachments[attachment].name,
                   content: buffers[attachment],
                 },
+                ...spareMediaAttachments,
               ];
             })(),
           })
