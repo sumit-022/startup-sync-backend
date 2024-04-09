@@ -10,7 +10,11 @@ import { getFormAttachments } from "../../../utils/form";
 import { uploadAndLinkDocument } from "../../../utils/upload";
 import { getRFQMailContent } from "../../../utils/main-content";
 import { getWeek } from "../../../utils/date";
-import { ORDERED_JOB_STATUS, isOrderConfirmed } from "../../../utils/jobStatus";
+import {
+  ORDERED_JOB_STATUS,
+  isOrderConfirmed,
+  isQuoted,
+} from "../../../utils/jobStatus";
 
 export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async create(ctx) {
@@ -668,7 +672,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           if (!acc[date]) acc[date] = { created: 0, confirmed: 0, quoted: 0 };
           acc[date].created += 1;
           if (isOrderConfirmed(job.status)) acc[date].confirmed += 1;
-          if (job.status === "QUOTEDTOCLIENT") acc[date].quoted += 1;
+          if (isQuoted(job.status)) acc[date].quoted += 1;
           return acc;
         }, {} as Record<string, { created: number; confirmed: number; quoted: number }>);
 
@@ -682,7 +686,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           if (!acc[week]) acc[week] = { created: 0, confirmed: 0, quoted: 0 };
           acc[week].created += 1;
           if (isOrderConfirmed(job.status)) acc[week].confirmed += 1;
-          if (job.status === "QUOTEDTOCLIENT") acc[week].quoted += 1;
+          if (isQuoted(job.status)) acc[week].quoted += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
 
@@ -696,7 +700,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           if (!acc[month]) acc[month] = { created: 0, confirmed: 0, quoted: 0 };
           acc[month].created += 1;
           if (isOrderConfirmed(job.status)) acc[month].confirmed += 1;
-          if (job.status === "QUOTEDTOCLIENT") acc[month].quoted += 1;
+          if (isQuoted(job.status)) acc[month].quoted += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
 
@@ -710,7 +714,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
           if (!acc[year]) acc[year] = { created: 0, confirmed: 0, quoted: 0 };
           acc[year].created += 1;
           if (isOrderConfirmed(job.status)) acc[year].confirmed += 1;
-          if (job.status === "QUOTEDTOCLIENT") acc[year].quoted += 1;
+          if (isQuoted(job.status)) acc[year].quoted += 1;
           return acc;
         }, {} as Record<number, { created: number; confirmed: number; quoted: number }>);
 
