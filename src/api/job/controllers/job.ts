@@ -337,18 +337,27 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
         console.warn("Encryption key not set");
       }
 
-      const spareMediaAttachments = (spares as any)
-        .map((spare) => {
-          if (!Array.isArray(spare.attachments)) return undefined;
-          const media = spare.attachments;
+      const spareMediaAttachments = await Promise.allSettled(
+        (spares as any)
+          .map((spare) => {
+            if (!spare.attachments) return [];
+            const media = spare.attachments;
 
-          return media.map((m, idx) => ({
-            filename: `spare-${m.name}-${idx + 1}.${m.ext}`,
-            content: m.url,
-          }));
-        })
-        .flat()
-        .filter((x) => x !== undefined);
+            return media.map(async (m, idx) => {
+              const res = await fetch(m.url);
+              if (!res.ok) {
+                throw new Error(`Failed to fetch media from ${m.url}`);
+              }
+              const buffer = new Uint8Array(await res.arrayBuffer());
+
+              return {
+                filename: `spare-${m.name}-${idx + 1}.${m.ext}`,
+                content: buffer,
+              };
+            });
+          })
+          .flat()
+      );
 
       // Send mails to every vendor
       const mails = await Promise.allSettled(
@@ -387,7 +396,15 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
                   filename: vendorAttachments[attachment].name,
                   content: buffers[attachment],
                 },
-                ...spareMediaAttachments,
+                ...spareMediaAttachments
+                  .map((sma) => {
+                    if (sma.status === "rejected") return undefined;
+                    return {
+                      filename: sma.value.filename,
+                      content: sma.value.content,
+                    };
+                  })
+                  .filter((x) => x !== undefined),
               ];
             })(),
           })
