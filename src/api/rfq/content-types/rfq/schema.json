@@ -90,6 +90,12 @@
       "required": true,
       "default": "USD",
       "regex": "[A-Z]"
+    },
+    "make": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
     }
   }
 }

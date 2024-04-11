@@ -132,6 +132,9 @@
         "JOBCANCELLED",
         "JOBCOMPLETED"
       ]
+    },
+    "clientReferenceNumber": {
+      "type": "string"
     }
   }
 }

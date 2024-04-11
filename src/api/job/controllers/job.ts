@@ -49,7 +49,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async sendRFQForm(ctx) {
     // TODO: Allow custom attachments for each vendor
 
-    type Vendor = { id: number; attachment: string };
+    type Vendor = { id: number; attachment: string; body: string };
 
     // Get the jobcode from the request body
     let { jobId: id } = ctx.request.body;
@@ -190,6 +190,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
                         spare: spareDetail.id,
                         quotedPrice: 0,
                         vendor: vendor.id,
+                        make: spareDetail.make,
                       },
                     })
                   : undefined
@@ -250,17 +251,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
               return cc;
             })(),
             subject: `${rfqNumber} - ${job.description || ""}`,
-            html:
-              getRFQMailContent({
-                link: `${origin}/vendor/form/rfq/${encrypt(
-                  rfqNumber,
-                  ENCRYPTION_KEY
-                )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
-                port: job.targetPort,
-                eta: job.vesselETA
-                  ? new Date(job.vesselETA).toDateString()
-                  : undefined,
-              }) + (ctx.request.body.mailFooter || ""),
+            html: vendors.find((v) => v.id === vendor.id)?.body,
             attachments: (() => {
               const attachment = vendors.find(
                 (v) => v.id === vendor.id
@@ -378,17 +369,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
               return cc;
             })(),
             subject: `${rfqNumber} - ${job.description || ""}`,
-            html:
-              getRFQMailContent({
-                link: `${origin}/vendor/form/rfq/${encrypt(
-                  rfqNumber,
-                  ENCRYPTION_KEY
-                )}/${encrypt(vendor.id.toString(), ENCRYPTION_KEY)}`,
-                port: job.targetPort,
-                eta: job.vesselETA
-                  ? new Date(job.vesselETA).toDateString()
-                  : undefined,
-              }) + (ctx.request.body.mailFooter || ""),
+            html: vendors.find((v) => v.id === vendor.id)?.body,
             attachments: (() => {
               const attachment = vendors.find(
                 (v) => v.id === vendor.id
