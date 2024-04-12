@@ -8,5 +8,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "GET",
+      path: "/purchase-order/stats",
+      handler: "purchase-order.stats",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

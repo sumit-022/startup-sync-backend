@@ -708,7 +708,16 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   },
 
   async statsByCompanies(ctx) {
-    const { n: nStr } = ctx.query;
+    const { n: nStr, jobType, status } = ctx.query;
+
+    const jobFilters = [
+      ["SPARES SUPPLY", "SERVICES"].findIndex((val) => val === jobType) > 0
+        ? `jobs.type = '${jobType}'`
+        : "",
+      ["QUERYRECEIVED", "ORDERCONFIRMED"].findIndex((val) => val === status) > 0
+        ? `jobs.status = '${status}'`
+        : "",
+    ].filter((j) => !!j);
 
     const n = parseInt(nStr ?? "10") ?? 10;
 
@@ -719,7 +728,9 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       await knex.raw(`SELECT companies.id, companies.name, COUNT(jobs.id) AS job_count
 FROM companies
 JOIN jobs_company_links ON companies.id = jobs_company_links.company_id
-JOIN jobs ON jobs_company_links.job_id = jobs.id
+JOIN jobs ON jobs_company_links.job_id = jobs.id${
+        jobFilters.length > 0 ? " AND " + jobFilters.join(" AND ") : ""
+      }
 GROUP BY companies.id, companies.name
 ORDER BY job_count DESC
 LIMIT ${n};
