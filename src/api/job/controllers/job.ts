@@ -63,14 +63,14 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       return ctx.badRequest("Invalid origin");
     }
 
-    const vendorAttachments = getFormAttachments(files, "vendorAttachments");
+    // const vendorAttachments = getFormAttachments(files, "vendorAttachments");
 
-    const buffers = Object.fromEntries(
-      Object.entries(vendorAttachments).map(([name, file]) => [
-        name,
-        fs.readFileSync(file.path),
-      ])
-    );
+    // const buffers = Object.fromEntries(
+    //   Object.entries(vendorAttachments).map(([name, file]) => [
+    //     name,
+    //     fs.readFileSync(file.path),
+    //   ])
+    // );
 
     if (!id) return ctx.badRequest("Job id is required");
 
@@ -256,13 +256,13 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
               const attachment = vendors.find(
                 (v) => v.id === vendor.id
               )?.attachment;
-              if (!attachment || !vendorAttachments?.[attachment])
-                return undefined;
+              // if (!attachment || !vendorAttachments?.[attachment])
+              //   return undefined;
               return [
-                {
-                  filename: vendorAttachments[attachment].name,
-                  content: buffers[attachment],
-                },
+                // {
+                //   filename: vendorAttachments[attachment].name,
+                //   content: buffers[attachment],
+                // },
                 ...spareMediaAttachments,
               ];
             })(),
@@ -374,13 +374,13 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
               const attachment = vendors.find(
                 (v) => v.id === vendor.id
               )?.attachment;
-              if (!attachment || !vendorAttachments?.[attachment])
-                return undefined;
+              // if (!attachment || !vendorAttachments?.[attachment])
+              //   return undefined;
               return [
-                {
-                  filename: vendorAttachments[attachment].name,
-                  content: buffers[attachment],
-                },
+                // {
+                //   filename: vendorAttachments[attachment].name,
+                //   content: buffers[attachment],
+                // },
                 ...spareMediaAttachments
                   .map((sma) => {
                     if (sma.status === "rejected") return undefined;
