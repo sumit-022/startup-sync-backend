@@ -123,6 +123,7 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
               job: job.id,
               quantity: spareDetail.quantity,
               description: spareDetail.description,
+              quantityUnit: spareDetail.quantityUnit,
             },
           })
         )
