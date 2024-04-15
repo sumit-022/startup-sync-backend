@@ -56,5 +56,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "POST",
+      path: "/job/:id/least-quotes",
+      handler: "job.getLeastQuote",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

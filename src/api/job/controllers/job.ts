@@ -811,4 +811,39 @@ LIMIT ${n};
       migratedJobsMarkedAsCompleted,
     };
   },
+
+  async getLeastQuote(ctx) {
+    const jobCode = ctx.params.id;
+
+    if (!jobCode) return ctx.badRequest("Job code is required");
+
+    // Get the least rfq for each spare
+    const rfqs = await strapi.entityService.findMany("api::rfq.rfq", {
+      filters: {
+        RFQNumber: `RFQ-${jobCode}`,
+      },
+      populate: ["spare"],
+    });
+
+    if (rfqs.length === 0) return ctx.notFound("RFQs not found");
+
+    const leastQuotes = rfqs.reduce((acc, rfq) => {
+      if (!acc[rfq.spare.id]) {
+        acc[rfq.spare.id] = null;
+      }
+      if (rfq.amount === null) return acc;
+      if (!acc[rfq.spare.id]) {
+        acc[rfq.spare.id] = rfq;
+      } else {
+        if (rfq.amount < acc[rfq.spare.id].amount) {
+          acc[rfq.spare.id] = rfq;
+        }
+      }
+      return acc;
+    }, {} as Record<number, any>);
+
+    return {
+      leastQuotes,
+    };
+  },
 }));
