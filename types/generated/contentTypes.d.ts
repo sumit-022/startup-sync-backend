@@ -915,13 +915,8 @@ export interface ApiJobJob extends Schema.CollectionType {
     status: Attribute.Enumeration<
       [
         'QUERYRECEIVED',
-        'QUOTEDTOVENDOR',
-        'RFQSENT',
-        'QUOTERECEIVED',
         'QUOTEDTOCLIENT',
         'ORDERCONFIRMED',
-        'JOBCOMPLETED',
-        'JOBCANCELLED',
         'PODAWAITED',
         'INVOICEAWAITED'
       ]
@@ -954,9 +949,6 @@ export interface ApiJobJob extends Schema.CollectionType {
     >;
     type: Attribute.Enumeration<['SPARES SUPPLY', 'SERVICES']>;
     agent: Attribute.Relation<'api::job.job', 'manyToOne', 'api::agent.agent'>;
-    jobCompleted: Attribute.Boolean &
-      Attribute.Required &
-      Attribute.DefaultTo<false>;
     poNumber: Attribute.String;
     notification: Attribute.Component<'jobs.notification'>;
     spares: Attribute.Relation<'api::job.job', 'oneToMany', 'api::spare.spare'>;
@@ -970,6 +962,8 @@ export interface ApiJobJob extends Schema.CollectionType {
       'api::purchase-order.purchase-order'
     >;
     jobClosedStatus: Attribute.Enumeration<['JOBCANCELLED', 'JOBCOMPLETED']>;
+    clientReferenceNumber: Attribute.String;
+    clientPO: Attribute.Media;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::job.job', 'oneToOne', 'admin::user'> &
@@ -1067,6 +1061,8 @@ export interface ApiRfqRfq extends Schema.CollectionType {
     currencyCode: Attribute.String &
       Attribute.Required &
       Attribute.DefaultTo<'USD'>;
+    make: Attribute.String;
+    model: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::rfq.rfq', 'oneToOne', 'admin::user'> &
@@ -1134,6 +1130,7 @@ export interface ApiSpareSpare extends Schema.CollectionType {
     description: Attribute.Text;
     attachments: Attribute.Media;
     rfqs: Attribute.Relation<'api::spare.spare', 'oneToMany', 'api::rfq.rfq'>;
+    quantityUnit: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

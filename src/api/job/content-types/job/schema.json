@@ -135,6 +135,16 @@
     },
     "clientReferenceNumber": {
       "type": "string"
+    },
+    "clientPO": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": true
     }
   }
 }

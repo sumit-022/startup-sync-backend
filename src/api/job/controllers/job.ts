@@ -831,11 +831,11 @@ LIMIT ${n};
       if (!acc[rfq.spare.id]) {
         acc[rfq.spare.id] = null;
       }
-      if (rfq.amount === null) return acc;
+      if (rfq.unitPrice === null) return acc;
       if (!acc[rfq.spare.id]) {
         acc[rfq.spare.id] = rfq;
       } else {
-        if (rfq.amount < acc[rfq.spare.id].amount) {
+        if (rfq.unitPrice < acc[rfq.spare.id].unitPrice) {
           acc[rfq.spare.id] = rfq;
         }
       }
