@@ -859,12 +859,20 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
   async statsByCompanies(ctx) {
     const { n: nStr, jobType, status } = ctx.query;
 
+    const statusQueryMap = {
+      ORDERCONFIRMED: `(${ORDERED_JOB_STATUS.slice(
+        ORDERED_JOB_STATUS.indexOf("ORDERCONFIRMED")
+      )
+        .map((st) => `jobs.status = '${st}'`)
+        .join(" OR ")})`,
+    };
+
     const jobFilters = [
-      ["SPARES SUPPLY", "SERVICES"].findIndex((val) => val === jobType) > 0
+      ["SPARES SUPPLY", "SERVICES"].findIndex((val) => val === jobType) >= 0
         ? `jobs.type = '${jobType}'`
         : "",
-      ["QUERYRECEIVED", "ORDERCONFIRMED"].findIndex((val) => val === status) > 0
-        ? `jobs.status = '${status}'`
+      ["ORDERCONFIRMED"].findIndex((val) => val === status) >= 0
+        ? statusQueryMap[status]
         : "",
     ].filter((j) => !!j);
 
