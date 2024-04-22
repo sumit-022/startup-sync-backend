@@ -418,6 +418,155 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
       };
     }
   },
+
+  async sendRFQMail(ctx) {
+    // TODO: Allow custom attachments for each vendor
+
+    type Vendor = { id: number; attachment: string; body: string };
+
+    // Get the jobcode from the request body
+    let { jobId: id } = ctx.request.body;
+    const vendors = JSON.parse(ctx.request.body.vendors) as Vendor[];
+
+    let origin = ctx.request.body.origin || ctx.request.headers.origin;
+
+    origin = matchBaseUrl(origin);
+    if (!origin || origin === false) {
+      return ctx.badRequest("Invalid origin");
+    }
+
+    if (!id) return ctx.badRequest("Job id is required");
+
+    // Get the job
+    const job = await strapi.entityService.findOne("api::job.job", id, {
+      populate: ["spares", "spares.attachments"],
+    });
+
+    if (!job) return ctx.notFound("Job not found");
+
+    // Check if the rfq is already generated for the vendors
+
+    const rfqs = await strapi.entityService.findMany("api::rfq.rfq", {
+      filters: {
+        RFQNumber: `RFQ-${job.jobCode}`,
+        vendor: vendors.map(({ id }) => id),
+      },
+    });
+
+    if (rfqs.length === 0) {
+      return ctx.badRequest("No such RFQ found for the vendors");
+    }
+
+    // Get the vendor emails
+    const vendorMails = await strapi.entityService.findMany(
+      "api::vendor.vendor",
+      {
+        filters: {
+          id: { $in: vendors.map(({ id }) => id) },
+        },
+        fields: ["id", "email"],
+        populate: ["salescontact"],
+      }
+    );
+
+    if (!Array.isArray(vendorMails) || vendorMails.length !== vendors.length)
+      return ctx.badRequest("Invalid vendor id");
+
+    // Generate the RFQ number
+    const rfqNumber = strapi
+      .service("api::job.job")
+      .generateRFQNumber(job.jobCode);
+
+    const spares = job.spares;
+
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "";
+
+    if (ENCRYPTION_KEY === "") {
+      console.warn("Encryption key not set");
+    }
+
+    const spareMediaAttachments = await Promise.allSettled(
+      (spares as any)
+        .map((spare) => {
+          if (!spare.attachments) return [];
+          const media = spare.attachments;
+
+          return media.map(async (m, idx) => {
+            const res = await fetch(m.url);
+            if (!res.ok) {
+              throw new Error(`Failed to fetch media from ${m.url}`);
+            }
+            const buffer = new Uint8Array(await res.arrayBuffer());
+
+            return {
+              filename: `spare-${m.name}-${idx + 1}.${m.ext}`,
+              content: buffer,
+            };
+          });
+        })
+        .flat()
+    );
+
+    // Send mails to every vendor
+    const mails = await Promise.allSettled(
+      vendorMails.map((vendor) =>
+        strapi.plugins["email"].services.email.send({
+          to: (vendor as any).email,
+          cc: (() => {
+            const cc = [
+              process.env["CC_EMAIL"],
+              vendor.salescontact?.mail,
+              ...JSON.parse(vendor.salescontact?.secondarymails || "[]"),
+            ].filter((mail) => typeof mail === "string");
+            if (cc.length === 0) return undefined;
+            return cc;
+          })(),
+          subject: `${rfqNumber} - ${job.description || ""}`,
+          html: vendors.find((v) => v.id === vendor.id)?.body,
+          attachments: (() => {
+            const attachment = vendors.find(
+              (v) => v.id === vendor.id
+            )?.attachment;
+            return [
+              ...spareMediaAttachments
+                .map((sma) => {
+                  if (sma.status === "rejected") return undefined;
+                  return {
+                    filename: sma.value.filename,
+                    content: sma.value.content,
+                  };
+                })
+                .filter((x) => x !== undefined),
+            ];
+          })(),
+        })
+      )
+    );
+
+    const unSettledMails = mails
+      .map(({ status }, idx) => {
+        if (status === "rejected") {
+          return vendorMails[idx];
+        }
+        return undefined;
+      })
+      .filter((x) => x !== undefined);
+
+    // Update the job status
+    await strapi.entityService.update("api::job.job", job.id, {
+      data: {
+        id: job.id,
+        purchaseStatus: "RFQSENT",
+        RFQNumber: rfqNumber,
+      },
+    });
+
+    return {
+      mails,
+      unSettledMails,
+    };
+  },
+
   async sendPO(ctx) {
     type Vendor = {
       id: number;

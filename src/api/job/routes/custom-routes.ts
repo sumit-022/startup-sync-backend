@@ -64,5 +64,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "POST",
+      path: "/job/:id/send-rfq-mail",
+      handler: "job.sendRFQMail",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };
