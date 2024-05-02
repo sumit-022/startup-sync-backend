@@ -856,6 +856,38 @@ export default factories.createCoreController("api::job.job", ({ strapi }) => ({
     }
   },
 
+  async statsByEmployee() {
+    const statusQueryMap = {
+      ORDERCONFIRMED: `(${ORDERED_JOB_STATUS.slice(
+        ORDERED_JOB_STATUS.indexOf("ORDERCONFIRMED")
+      )
+        .map((st) => `jobs.status = '${st}'`)
+        .join(" OR ")})`,
+      QUOTEDTOCLIENT: `(${ORDERED_JOB_STATUS.slice(
+        ORDERED_JOB_STATUS.indexOf("QUOTEDTOCLIENT")
+      )
+        .map((st) => `jobs.status = '${st}'`)
+        .join(" OR ")})`,
+    };
+    const knex = strapi.db.connection;
+    const { rows: employees } = await knex.raw(
+      `SELECT up_users.id, up_users.username,
+      COUNT(jobs.id) FILTER (WHERE ${statusQueryMap["ORDERCONFIRMED"]}) AS confirmed_count,
+      COUNT(jobs.id) FILTER (WHERE ${statusQueryMap["QUOTEDTOCLIENT"]}) AS quoted_count,
+      COUNT(jobs.id) AS total_count,
+      SUM(jobs.amount) FILTER (WHERE jobs.amount IS NOT NULL) AS total_revenue,
+      AVG(jobs."quoted_at" - jobs."received_at") FILTER (WHERE jobs."quoted_at" IS NOT NULL AND jobs."received_at" IS NOT NULL) AS avg_quote_time
+      FROM up_users
+      JOIN jobs_assigned_to_links ON up_users.id = jobs_assigned_to_links.user_id
+      JOIN jobs ON jobs_assigned_to_links.job_id = jobs.id
+      GROUP BY up_users.id, up_users.username
+      ORDER BY confirmed_count DESC;`
+    );
+    return {
+      employees,
+    };
+  },
+
   async statsByCompanies(ctx) {
     const { n: nStr, jobType, status } = ctx.query;
 

@@ -13,3 +13,7 @@ export const isOrderConfirmed = (jobStatus: string) =>
 export const isQuoted = (jobStatus: string) =>
   ORDERED_JOB_STATUS.indexOf(jobStatus) >=
   ORDERED_JOB_STATUS.indexOf("QUOTEDTOCLIENT");
+
+export const isQueryReceived = (jobStatus: string) =>
+  ORDERED_JOB_STATUS.indexOf(jobStatus) >=
+  ORDERED_JOB_STATUS.indexOf("QUERYRECEIVED");

@@ -72,5 +72,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: "GET",
+      path: "/job/stats/employee",
+      handler: "job.statsByEmployee",
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

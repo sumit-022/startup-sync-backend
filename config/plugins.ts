@@ -22,16 +22,17 @@ export default ({ env }) => ({
     config: {
       provider: "nodemailer",
       providerOptions: {
-        host: env("SMTP_HOST", "smtp.example.com"),
-        port: env("SMTP_PORT", 587),
+        host: env("SMTP_HOST", "smtp.gmail.com"),
+        port: env("SMTP_PORT", 465),
         auth: {
-          user: env("SMTP_USERNAME"),
-          pass: env("SMTP_PASSWORD"),
+          user: env("SMTP_USERNAME", "lcb2021016@iiitl.ac.in"),
+          pass: env("SMTP_PASSWORD", "prik zmha ccog vduk"),
         },
         // ... any custom nodemailer options
       },
       settings: {
-        defaultFrom: "procurement@shinpoengineering.com",
+        defaultFrom: "lcb2021016@gmail.com",
+        defaultReplyTo: "lcb2021016@iiitl.ac.in",
       },
     },
   },
